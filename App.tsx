@@ -1,20 +1,34 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState } from "react";
+import { StatusBar } from "expo-status-bar";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import SplashScreen from "./components/SplashScreen";
+import LoginScreen from "./components/LoginScreen";
+import ProteinListScreen from "./components/ProteinListScreen";
+
+function AppContent() {
+  const [showSplash, setShowSplash] = useState(true);
+  const { isAuthenticated, login, isLoading } = useAuth();
+
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
+
+  if (isLoading) {
+    return <SplashScreen onFinish={() => {}} />;
+  }
+
+  if (!isAuthenticated) {
+    return <LoginScreen onLoginSuccess={login} />;
+  }
+
+  return <ProteinListScreen />;
+}
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
+    <AuthProvider>
+      <AppContent />
       <StatusBar style="auto" />
-    </View>
+    </AuthProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
