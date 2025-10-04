@@ -32,6 +32,13 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env
+
+# GitHub OAuth secrets
+.env
 
 # typescript
 *.tsbuildinfo
+
+
+*.cif
