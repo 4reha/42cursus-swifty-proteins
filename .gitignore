@@ -42,3 +42,11 @@ yarn-error.*
 
 
 *.cif
+
+# IDE
+.vscode
+.idea
+.cursorrules
+.cursor
+.cursorignore
+.cursorignore

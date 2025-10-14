@@ -1,17 +1,17 @@
+import MCIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import React from "react";
 import {
-  TouchableOpacity,
-  Text,
   ActivityIndicator,
-  View,
-  TouchableOpacityProps,
   StyleProp,
-  ViewStyle,
+  Text,
   TextStyle,
+  TouchableOpacity,
+  TouchableOpacityProps,
+  View,
+  ViewStyle,
 } from "react-native";
-import MCIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { globalStyles } from "../../styles/globalStyles";
 import { theme } from "../../styles/theme";
-import globalStyles from "../../styles/globalStyles";
 
 type ButtonVariant = "primary" | "success" | "ghost" | "outline";
 type ButtonSize = "sm" | "md" | "lg";

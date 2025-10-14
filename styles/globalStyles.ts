@@ -128,6 +128,7 @@ export const globalStyles = StyleSheet.create({
     borderRadius: theme.borderRadius.lg,
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
+    minHeight: 52,
     marginBottom: theme.spacing.lg,
     ...theme.shadows.md,
   },
@@ -135,7 +136,7 @@ export const globalStyles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: theme.typography.fontSize.base,
-    color: theme.colors.text.primary,
+    color: theme.colors.text.white,
   },
 
   // Error styles

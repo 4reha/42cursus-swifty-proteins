@@ -1,6 +1,6 @@
 import React from "react";
-import { View, ViewProps, StyleProp, ViewStyle } from "react-native";
-import globalStyles from "../../styles/globalStyles";
+import { StyleProp, View, ViewProps, ViewStyle } from "react-native";
+import { globalStyles } from "../../styles/globalStyles";
 
 interface CardProps extends ViewProps {
   readonly children: React.ReactNode;

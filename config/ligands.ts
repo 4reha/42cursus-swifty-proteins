@@ -1,4 +1,6 @@
-export const LIGAND_API_URL = "https://files.rcsb.org/ligands/download/";
+export const LIGAND_API_URL = "https://files.rcsb.org/ligands/view/";
+
+export const LIGAND_API_SVG_URL = "https://cdn.rcsb.org/images/ccd/labeled/";
 
 export const LIGANDS = [
   "TEST",
