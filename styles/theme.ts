@@ -2,15 +2,15 @@
 export const colors = {
   // Primary gradient colors
   primary: {
-    light: "#667eea",
-    dark: "#764ba2",
-    gradient: ["#667eea", "#764ba2"],
+    light: "#1a1a2e",
+    dark: "#1a1a2e",
+    gradient: ["#1a1a2e", "#1a1a2e"],
   },
 
   // UI Colors
   background: {
-    primary: "#f8f9fa",
-    card: "#ffffff",
+    primary: "#1a1a2e",
+    card: "#0f1020",
     overlay: "rgba(255, 255, 255, 0.05)",
     overlayStrong: "rgba(255, 255, 255, 0.2)",
   },
