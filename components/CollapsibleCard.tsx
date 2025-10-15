@@ -3,12 +3,7 @@ import MCIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Card from './ui/Card';
-
-type CollapsibleCardProps = {
-	title: string;
-	children: React.ReactNode;
-	defaultExpanded?: boolean;
-}
+import { CollapsibleCardProps } from '@/types/types';
 
 export default function CollapsibleCard({ title, children, defaultExpanded = false }: CollapsibleCardProps) {
 	const [expanded, setExpanded] = useState(defaultExpanded);

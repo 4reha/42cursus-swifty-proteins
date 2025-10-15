@@ -1,12 +1,7 @@
 // services/biometricService.ts
 import * as LocalAuthentication from 'expo-local-authentication';
 import { Platform } from 'react-native';
-
-export interface BiometricCapabilities {
-	isSupported: boolean;
-	isEnrolled: boolean;
-	biometricType: string;
-}
+import { BiometricCapabilities } from '@/types/types';
 
 export class BiometricService {
 	/**

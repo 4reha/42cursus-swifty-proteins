@@ -7,7 +7,7 @@ import React from 'react';
 import { FlatList, Text, TouchableOpacity, View } from 'react-native';
 
 export default function FavoritesScreen() {
-	const { favorites, removeFromFavorites } = useFavorites();
+	const { favorites, removeFromFavorites, getFavoritesCount, getMaxFavorites } = useFavorites();
 
 	const renderFavoriteItem = ({ item }: { item: any }) => (
 		<TouchableOpacity
@@ -99,7 +99,7 @@ export default function FavoritesScreen() {
 					color: theme.colors.text.whiteLight,
 					fontSize: theme.typography.fontSize.base,
 				}}>
-					Your favorite proteins
+					Your favorite proteins ({getFavoritesCount()}/{getMaxFavorites()})
 				</Text>
 			</View>
 

@@ -1,12 +1,6 @@
 import axios, { AxiosResponse, isCancel } from 'axios';
 import { useCallback, useEffect, useRef, useState } from 'react';
-
-type UseFetchResult<T> = {
-	data: T | null;
-	loading: boolean;
-	error: string | null;
-	refetch: () => Promise<void>;
-};
+import { UseFetchResult } from '@/types/types';
 
 /**
  * Simple useFetch hook for GET requests only

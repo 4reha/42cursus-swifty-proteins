@@ -1,16 +1,8 @@
-import React, { createContext, ReactNode, useContext, useRef, useState } from 'react';
+import React, { createContext, useContext, useRef, useState } from 'react';
 import { Animated, Dimensions, StyleSheet, Text } from 'react-native';
-
-interface ToastContextType {
-	showToast: (message: string, duration?: number) => void;
-	hideToast: () => void;
-}
+import { ToastContextType, ToastProviderProps } from '../types/types';
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
-
-interface ToastProviderProps {
-	children: ReactNode;
-}
 
 export const ToastProvider = ({ children }: ToastProviderProps) => {
 	const [toastVisible, setToastVisible] = useState(false);

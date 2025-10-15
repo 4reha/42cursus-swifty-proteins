@@ -27,4 +27,3 @@ if (!GITHUB_OAUTH_CONFIG.clientId || !GITHUB_OAUTH_CONFIG.clientSecret) {
   );
 }
 
-console.log("OAuth Redirect URI:", GITHUB_OAUTH_CONFIG.redirectUri);

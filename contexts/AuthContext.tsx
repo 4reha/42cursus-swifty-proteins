@@ -6,95 +6,14 @@ import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
+import { AuthMethod, User, AuthContextType } from '@/types/types';
+import { useToast } from './ToastContext';
 
 // Storage Keys - Separate for each auth method
 const PASSWORD_USER_KEY = 'password_user_data';
 const GITHUB_USER_KEY = 'github_user_data';
 const BIOMETRIC_ENABLED_KEY = 'biometric_enabled';
 const CURRENT_AUTH_METHOD_KEY = 'current_auth_method';
-
-type AuthMethod = 'password' | 'github';
-
-interface User {
-	id: string;
-	email: string;
-	username: string;
-	authMethod: AuthMethod;
-	githubToken?: string;
-	hashedPassword?: string;
-	avatarUrl?: string;
-	// Additional GitHub data
-	githubData?: {
-		name?: string;
-		bio?: string;
-		location?: string;
-		company?: string;
-		blog?: string;
-		twitter_username?: string;
-		public_repos?: number;
-		public_gists?: number;
-		followers?: number;
-		following?: number;
-		created_at?: string;
-		updated_at?: string;
-		hireable?: boolean;
-		html_url?: string;
-		repos_url?: string;
-		organizations_url?: string;
-		starred_url?: string;
-		subscriptions_url?: string;
-		received_events_url?: string;
-		events_url?: string;
-		type?: string;
-		site_admin?: boolean;
-		gravatar_id?: string;
-		node_id?: string;
-		url?: string;
-		followers_url?: string;
-		following_url?: string;
-		gists_url?: string;
-		plan?: {
-			name: string;
-			space: number;
-			private_repos: number;
-			collaborators: number;
-		};
-		// Additional fetched data
-		recent_repos?: any[];
-		organizations?: any[];
-		starred_repos?: any[];
-	};
-}
-
-interface AuthContextType {
-	user: User | null;
-	isAuthenticated: boolean;
-	isLoading: boolean;
-	isBiometricSupported: boolean;
-	isBiometricEnrolled: boolean;
-	isBiometricEnabled: boolean;
-	currentAuthMethod: AuthMethod | null;
-
-	// Auth methods
-	loginWithPassword: (email: string, password: string) => Promise<void>;
-	loginWithGitHub: () => Promise<void>;
-	loginWithBiometric: () => Promise<boolean>;
-	logout: () => Promise<void>;
-
-	// Biometric settings
-	enableBiometric: () => Promise<boolean>;
-	disableBiometric: () => Promise<void>;
-
-	// Check if accounts exist
-	hasPasswordAccount: () => Promise<boolean>;
-	hasGitHubAccount: () => Promise<boolean>;
-
-	// Sharing state management
-	setSharingInProgress: (inProgress: boolean) => void;
-
-	// Utility functions
-	clearPasswordAccount: () => Promise<void>;
-}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -108,6 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const [currentAuthMethod, setCurrentAuthMethod] = useState<AuthMethod | null>(null);
 	const [isOAuthInProgress, setIsOAuthInProgress] = useState(false);
 	const [isSharingInProgress, setIsSharingInProgress] = useState(false);
+	const { showToast } = useToast();
 	const sharingInProgressRef = useRef(false);
 
 	const appState = useRef(AppState.currentState);
@@ -133,27 +53,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			appState.current.match(/inactive|background/) &&
 			nextAppState === 'active'
 		) {
-			console.log('📱 [APP_STATE] App came to foreground from background/inactive');
-
 			// Don't force logout if OAuth or sharing is in progress
 			if (isOAuthInProgress) {
-				console.log('📱 [APP_STATE] OAuth in progress - skipping logout');
 				return;
 			}
 			if (isSharingInProgress || sharingInProgressRef.current) {
-				console.log('📱 [APP_STATE] Sharing in progress (state or ref) - skipping logout');
 				// Reset the ref when we detect sharing was in progress
 				sharingInProgressRef.current = false;
 				return;
 			}
-			console.log('📱 [APP_STATE] No special operations in progress - forcing logout');
 			forceLogoutOnBackground();
-		} else {
-			console.log('📱 [APP_STATE] State change not requiring logout check');
 		}
 
 		appState.current = nextAppState;
-		console.log('📱 [APP_STATE] App state updated to:', nextAppState);
 	}, [isOAuthInProgress, isSharingInProgress, forceLogoutOnBackground]);
 
 	// Monitor app state changes - CRITICAL for "always show login" requirement
@@ -163,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	}, [handleAppStateChange]);
 
 
-	const checkBiometricCapabilities = async () => {
+	const checkBiometricCapabilities = useCallback(async () => {
 		try {
 			const compatible = await LocalAuthentication.hasHardwareAsync();
 			setIsBiometricSupported(compatible);
@@ -176,23 +88,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				const enabled = await SecureStore.getItemAsync(BIOMETRIC_ENABLED_KEY);
 				setIsBiometricEnabled(enabled === 'true');
 			}
-		} catch (error) {
-			console.error('Error checking biometric capabilities:', error);
+		} catch {
+			showToast('Failed to check biometric capabilities', 3000);
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, [showToast]);
 
 	// Restore authentication state from SecureStore
-	const restoreAuthState = async () => {
+	const restoreAuthState = useCallback(async () => {
 		try {
-			console.log('🔄 Restoring authentication state...');
-
 			// Get the current auth method
 			const currentAuthMethod = await SecureStore.getItemAsync(CURRENT_AUTH_METHOD_KEY);
 
 			if (!currentAuthMethod) {
-				console.log('ℹ️ No previous authentication found');
 				return;
 			}
 
@@ -201,30 +110,76 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			const storedUserData = await SecureStore.getItemAsync(storageKey);
 
 			if (storedUserData) {
-				const storedUser: User = JSON.parse(storedUserData);
-				console.log('✅ Found stored user data:', {
-					username: storedUser.username,
-					authMethod: storedUser.authMethod,
-					email: storedUser.email
-				});
+				const credentials = JSON.parse(storedUserData);
 
-				setUser(storedUser);
+				// Create user object for state (fetch full data if needed)
+				let user: User;
+
+				if (currentAuthMethod === 'password') {
+					// For password users, we have minimal data
+					user = {
+						id: `pwd_${Date.now()}`,
+						email: `${credentials.username}@example.com`, // Reconstruct email
+						username: credentials.username,
+						authMethod: 'password',
+						hashedPassword: credentials.hashedPassword,
+					};
+				} else {
+					// For GitHub users, fetch full data from GitHub API
+					// Note: Using manual fetch here for initialization, but useFetch hook is available for components
+					try {
+						const response = await fetch('https://api.github.com/user', {
+							headers: {
+								Authorization: `Bearer ${credentials.githubToken || ''}`,
+								Accept: 'application/json',
+							},
+						});
+
+						if (response.ok) {
+							const githubUser = await response.json();
+							user = {
+								id: `gh_${githubUser.id}`,
+								email: githubUser.email || `${credentials.username}@github.com`,
+								username: githubUser.login,
+								authMethod: 'github',
+								githubToken: credentials.githubToken,
+								avatarUrl: githubUser.avatar_url,
+								githubData: githubUser,
+							};
+						} else {
+							// Fallback to minimal data
+							user = {
+								id: `gh_${Date.now()}`,
+								email: `${credentials.username}@github.com`,
+								username: credentials.username,
+								authMethod: 'github',
+							};
+						}
+					} catch {
+						// Fallback to minimal data
+						user = {
+							id: `gh_${Date.now()}`,
+							email: `${credentials.username}@github.com`,
+							username: credentials.username,
+							authMethod: 'github',
+						};
+					}
+				}
+
+				setUser(user);
 				setIsAuthenticated(true);
 				setCurrentAuthMethod(currentAuthMethod as AuthMethod);
-				console.log('✅ Authentication state restored successfully');
-			} else {
-				console.log('ℹ️ No stored user data found');
 			}
-		} catch (error) {
-			console.error('❌ Error restoring authentication state:', error);
+		} catch {
+			showToast('Failed to restore authentication state', 3000);
 		}
-	};
+	}, [showToast]);
 
 	// Check biometric capabilities and restore auth state on mount
 	useEffect(() => {
 		checkBiometricCapabilities();
 		restoreAuthState();
-	}, []);
+	}, [checkBiometricCapabilities, restoreAuthState]);
 
 	// Hash password (simple implementation - use bcrypt in production)
 	const hashPassword = async (password: string): Promise<string> => {
@@ -262,37 +217,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 			// Normalize email (trim and lowercase)
 			const normalizedEmail = email.trim().toLowerCase();
-			console.log('🔐 Login attempt with email:', normalizedEmail);
 
 			// Check if a password account already exists
 			const existingUserData = await SecureStore.getItemAsync(PASSWORD_USER_KEY);
 
 			if (existingUserData) {
 				// User exists - validate credentials
-				console.log('🔍 Existing password account found, validating credentials...');
-				const existingUser: User = JSON.parse(existingUserData);
+				const userCredentials = JSON.parse(existingUserData);
 				const hashedPassword = await hashPassword(password);
 
-				console.log('📊 Credential comparison:', {
-					storedEmail: existingUser.email,
-					providedEmail: normalizedEmail,
-					emailMatch: existingUser.email === normalizedEmail,
-					passwordMatch: existingUser.hashedPassword === hashedPassword
-				});
-
-				// Check if email and password match
-				if (existingUser.email !== normalizedEmail || existingUser.hashedPassword !== hashedPassword) {
-					console.log('❌ Invalid credentials provided');
+				// Check if username and password match
+				if (userCredentials.username !== normalizedEmail.split('@')[0] || userCredentials.hashedPassword !== hashedPassword) {
 					throw new Error('Invalid email or password');
 				}
 
 				// Credentials are correct - login
-				console.log('✅ Credentials validated successfully');
 				await SecureStore.setItemAsync(CURRENT_AUTH_METHOD_KEY, 'password');
-				setUser(existingUser);
+
+				// Create user object for state (not stored)
+				const user: User = {
+					id: `pwd_${Date.now()}`,
+					email: normalizedEmail,
+					username: userCredentials.username,
+					authMethod: 'password',
+					hashedPassword: userCredentials.hashedPassword,
+				};
+
+				setUser(user);
 				setIsAuthenticated(true);
 				setCurrentAuthMethod('password');
-				console.log('✅ Password login completed, authentication state set to true');
 
 				// Small delay to ensure state is updated
 				await new Promise(resolve => setTimeout(resolve, 100));
@@ -300,27 +253,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				router.replace('/(tabs)');
 			} else {
 				// First time login - create and store user
-				console.log('📝 First time password login, creating new account...');
 				const hashedPassword = await hashPassword(password);
 
-				const user: User = {
-					id: `pwd_${Date.now()}`,
-					email: normalizedEmail,
+				const userCredentials = {
 					username: normalizedEmail.split('@')[0], // Use email prefix as username
-					authMethod: 'password',
 					hashedPassword: hashedPassword,
 				};
 
-				console.log('💾 Storing new user with email:', normalizedEmail);
-
-				// Store user data
-				await SecureStore.setItemAsync(PASSWORD_USER_KEY, JSON.stringify(user));
+				// Store minimal user data
+				await SecureStore.setItemAsync(PASSWORD_USER_KEY, JSON.stringify(userCredentials));
 				await SecureStore.setItemAsync(CURRENT_AUTH_METHOD_KEY, 'password');
+
+				// Create user object for state (not stored)
+				const user: User = {
+					id: `pwd_${Date.now()}`,
+					email: normalizedEmail,
+					username: userCredentials.username,
+					authMethod: 'password',
+					hashedPassword: userCredentials.hashedPassword,
+				};
 
 				setUser(user);
 				setIsAuthenticated(true);
 				setCurrentAuthMethod('password');
-				console.log('✅ Password account created and login completed, authentication state set to true');
 
 				// Small delay to ensure state is updated
 				await new Promise(resolve => setTimeout(resolve, 100));
@@ -330,32 +285,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 			// Show biometric setup prompt after successful login
 			if (isBiometricSupported && isBiometricEnrolled && !isBiometricEnabled) {
-				console.log('🔐 Biometric setup conditions met:', {
-					isBiometricSupported,
-					isBiometricEnrolled,
-					isBiometricEnabled
-				});
-
-				console.log('🔐 Current auth state before prompt:', {
-					isBiometricSupported,
-					isBiometricEnrolled,
-					isBiometricEnabled
-				});
-
 				// Add a longer delay to ensure authentication state is fully updated
 				setTimeout(() => {
-					console.log('⏰ Showing biometric setup prompt after delay');
 					// Note: Alert will be shown in login.tsx's handlePasswordAuth
 				}, 2000);
-			} else {
-				console.log('ℹ️ Biometric setup not needed:', {
-					isBiometricSupported,
-					isBiometricEnrolled,
-					isBiometricEnabled
-				});
 			}
 		} catch (error) {
-			console.log('⚠️ Login error:', error);
 			throw error;
 		} finally {
 			setIsLoading(false);
@@ -377,8 +312,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	// Handle GitHub authentication success
 	const handleGitHubAuthSuccess = useCallback(async (code: string) => {
 		try {
-			console.log('🔄 Processing GitHub authentication...');
-
 			// Exchange code for token
 			// If the authorization request used PKCE (code_challenge), include the code_verifier here.
 			const tokenBody: any = {
@@ -472,24 +405,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				},
 			};
 
-			// Store GitHub user data separately
-			await SecureStore.setItemAsync(GITHUB_USER_KEY, JSON.stringify(newUser));
-			await SecureStore.setItemAsync(CURRENT_AUTH_METHOD_KEY, 'github');
+			// Store minimal GitHub user data
+			const githubCredentials = {
+				username: githubUser.login,
+				githubToken: access_token,
+			};
 
-			console.log('💾 Stored GitHub user data and auth method');
+			await SecureStore.setItemAsync(GITHUB_USER_KEY, JSON.stringify(githubCredentials));
+			await SecureStore.setItemAsync(CURRENT_AUTH_METHOD_KEY, 'github');
 
 			setUser(newUser);
 			setIsAuthenticated(true);
 			setCurrentAuthMethod('github');
-			console.log('✅ GitHub login completed, authentication state set to true');
-
-			// Verify storage was successful
-			const storedAuthMethod = await SecureStore.getItemAsync(CURRENT_AUTH_METHOD_KEY);
-			const storedUserData = await SecureStore.getItemAsync(GITHUB_USER_KEY);
-			console.log('🔍 Storage verification:', {
-				authMethod: storedAuthMethod,
-				hasUserData: !!storedUserData
-			});
 
 			// Small delay to ensure state and storage are updated
 			await new Promise(resolve => setTimeout(resolve, 500));
@@ -498,28 +425,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			setIsOAuthInProgress(false);
 
 			router.replace('/(tabs)');
-		} catch (error) {
-			console.error('GitHub authentication error:', error);
+		} catch {
+			showToast('GitHub authentication failed', 3000);
 			setIsLoading(false);
 			setIsOAuthInProgress(false);
 		}
-	}, [request]);
+	}, [request, showToast]);
 
 	// Handle OAuth response
 	useEffect(() => {
 		if (response?.type === 'success') {
-			console.log('✅ OAuth success - Code received:', response.params.code);
 			handleGitHubAuthSuccess(response.params.code);
 		} else if (response?.type === 'error') {
 			console.error('❌ OAuth error:', response.error);
 			setIsLoading(false);
 			setIsOAuthInProgress(false);
 		} else if (response?.type === 'cancel') {
-			console.log('⚠️ OAuth cancelled by user');
 			setIsLoading(false);
 			setIsOAuthInProgress(false);
 		}
-	}, [response, handleGitHubAuthSuccess]);
+	}, [response, handleGitHubAuthSuccess, showToast]);
 
 
 
@@ -529,18 +454,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			setIsLoading(true);
 			setIsOAuthInProgress(true);
 
-			console.log('🔗 Redirect URI:', GITHUB_OAUTH_CONFIG.redirectUri);
-			console.log('🔗 Client ID:', GITHUB_OAUTH_CONFIG.clientId);
-
 			if (!request) {
-				console.error('❌ OAuth request not ready');
 				setIsLoading(false);
 				setIsOAuthInProgress(false);
 				return;
 			}
 
 			const result = await promptAsync();
-			console.log('🔐 GitHub login result:', result.type);
 
 			if (result.type === 'success') {
 				// The success handling is done in the useEffect
@@ -550,11 +470,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				setIsOAuthInProgress(false);
 				return;
 			}
-		} catch (error) {
-			console.error('GitHub login error:', error);
+		} catch {
+			showToast('GitHub login failed', 3000);
 			setIsLoading(false);
 			setIsOAuthInProgress(false);
-			throw error;
 		}
 	};
 
@@ -602,8 +521,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			}
 
 			return false;
-		} catch (error) {
-			console.error('Biometric authentication error:', error);
+		} catch {
+			showToast('Biometric authentication failed', 3000);
 			return false;
 		}
 	};
@@ -611,29 +530,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	// Enable biometric authentication
 	const enableBiometric = async (): Promise<boolean> => {
 		try {
-			console.log('🔐 enableBiometric called with state:', {
-				isAuthenticated,
-				isBiometricSupported,
-				isBiometricEnrolled,
-				isBiometricEnabled,
-				user: user ? 'exists' : 'null'
-			});
-
 			if (!isBiometricSupported || !isBiometricEnrolled) {
-				console.log('❌ Biometric not supported or not enrolled');
 				return false;
 			}
 
 			// Check if user is authenticated by looking at stored data instead of React state
 			const currentAuthMethod = await SecureStore.getItemAsync(CURRENT_AUTH_METHOD_KEY);
-			console.log('🔍 Checking stored auth method:', currentAuthMethod);
 
 			if (!currentAuthMethod) {
-				console.log('❌ No stored authentication method found');
 				// Wait a bit and try again in case storage is still in progress
 				await new Promise(resolve => setTimeout(resolve, 1000));
 				const retryAuthMethod = await SecureStore.getItemAsync(CURRENT_AUTH_METHOD_KEY);
-				console.log('🔍 Retry checking stored auth method:', retryAuthMethod);
 
 				if (!retryAuthMethod) {
 					throw new Error('Please login first to enable biometric authentication');
@@ -642,21 +549,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 			const storageKey = currentAuthMethod === 'password' ? PASSWORD_USER_KEY : GITHUB_USER_KEY;
 			const storedUserData = await SecureStore.getItemAsync(storageKey);
-			console.log('🔍 Checking stored user data for key:', storageKey, 'Found:', !!storedUserData);
 
 			if (!storedUserData) {
-				console.log('❌ No stored user data found for method:', currentAuthMethod);
 				// Wait a bit and try again in case storage is still in progress
 				await new Promise(resolve => setTimeout(resolve, 1000));
 				const retryUserData = await SecureStore.getItemAsync(storageKey);
-				console.log('🔍 Retry checking stored user data:', !!retryUserData);
 
 				if (!retryUserData) {
 					throw new Error('Please login first to enable biometric authentication');
 				}
 			}
-
-			console.log('✅ Found stored authentication data, proceeding with biometric setup');
 
 			// Test biometric authentication
 			const result = await LocalAuthentication.authenticateAsync({
@@ -671,8 +573,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			}
 
 			return false;
-		} catch (error) {
-			console.error('Enable biometric error:', error);
+		} catch {
+			showToast('Failed to enable biometric authentication', 3000);
 			return false;
 		}
 	};
@@ -682,8 +584,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		try {
 			await SecureStore.deleteItemAsync(BIOMETRIC_ENABLED_KEY);
 			setIsBiometricEnabled(false);
-		} catch (error) {
-			console.error('Disable biometric error:', error);
+		} catch {
+			showToast('Failed to disable biometric authentication', 3000);
 		}
 	};
 
@@ -696,28 +598,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			// Note: We keep user data for biometric re-login
 			// Only clear authentication state
 			router.replace('/login');
-		} catch (error) {
-			console.error('Logout error:', error);
+
+			// Force refresh the login screen to reload biometric state
+			// This ensures the biometric state is properly reloaded from SecureStore
+			setTimeout(async () => {
+				// Re-initialize authentication state to reload biometric capabilities
+				await checkBiometricCapabilities();
+				router.replace('/login');
+			}, 200);
+		} catch {
+			showToast('Logout failed', 3000);
 		}
 	};
 
 	const setSharingInProgress = (inProgress: boolean) => {
-		console.log('🔐 [AUTH] setSharingInProgress called:', inProgress);
-		console.log('🔐 [AUTH] Current sharing state:', isSharingInProgress);
 		setIsSharingInProgress(inProgress);
 		sharingInProgressRef.current = inProgress;
-		console.log('🔐 [AUTH] Sharing state updated to:', inProgress);
-		console.log('🔐 [AUTH] Sharing ref updated to:', inProgress);
 	};
 
 	// Clear stored password account (useful for testing/resetting)
 	const clearPasswordAccount = async () => {
 		try {
-			console.log('🗑️ Clearing stored password account...');
 			await SecureStore.deleteItemAsync(PASSWORD_USER_KEY);
-			console.log('✅ Password account cleared successfully');
-		} catch (error) {
-			console.error('❌ Error clearing password account:', error);
+		} catch {
+			showToast('Failed to clear account data', 3000);
 		}
 	};
 

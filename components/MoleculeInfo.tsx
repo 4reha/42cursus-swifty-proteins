@@ -1,17 +1,11 @@
-import { ParsedLigandData } from '@/services/ligandAPI';
 import { theme } from "@/styles/theme";
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import Card from "./ui/Card";
 import CollapsibleCard from './CollapsibleCard';
+import { MoleculeInfoProps } from '@/types/types';
 
-type MoleculeInfoProps = {
-  readonly data?: ParsedLigandData | null;
-  readonly svgXml?: string | null;
-  readonly svgLoading?: boolean;
-  readonly svgError?: string | null;
-}
 
 export default function MoleculeInfo({ data, svgXml, svgLoading, svgError }: Readonly<MoleculeInfoProps>) {
   // Defensive rendering: if data is not yet available, show a small placeholder

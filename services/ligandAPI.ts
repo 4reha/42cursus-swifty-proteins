@@ -1,57 +1,7 @@
 import { LIGAND_API_URL } from '@/config/ligands';
 import axios from 'axios';
 import { Linking } from 'react-native';
-
-export type Atom = {
-	atomId: string;
-	element?: string;
-	type?: string;
-	x?: number;
-	y?: number;
-	z?: number;
-	idealX?: number;
-	idealY?: number;
-	idealZ?: number;
-	aromatic?: boolean;
-	leaving?: boolean;
-	stereo?: string | null;
-	backbone?: boolean;
-	nTerminal?: boolean;
-	cTerminal?: boolean;
-};
-
-export type Bond = {
-	a: string;
-	b: string;
-	order: string;
-};
-
-export type ParsedLigandData = {
-	id: string;
-	name?: string;
-	type?: string;
-	pdbxType?: string;
-	formula?: string;
-	weight?: number;
-	oneLetterCode?: string;
-	releaseStatus?: string;
-	threeLetterCode?: string;
-	synonyms?: string[] | string;
-	formalCharge?: string | number;
-	initialDate?: string;
-	modifiedDate?: string;
-	descriptors?: { smiles?: string; inchi?: string; inchiKey?: string };
-	identifiers?: { systematicName?: string[] };
-	atoms: Atom[];
-	bonds: Bond[];
-	svgUrl?: string;
-	cifUrl?: string;
-	pdbxModelDbCode?: string;
-	processingSite?: string;
-	ambiguousFlag?: string;
-	pcm?: string;
-	audit?: { action?: string; date?: string; site?: string }[];
-};
+import { Atom, Bond, ParsedLigandData } from '@/types/types';
 
 /**
  * Clean a CIF value by removing quotes and handling special characters

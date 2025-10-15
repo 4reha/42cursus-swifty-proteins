@@ -16,7 +16,6 @@ export default function OAuthRedirect() {
 	const router = useRouter();
 
 	useEffect(() => {
-		console.log('🔁 OAuth redirect route hit. Returning to login.');
 
 		// Small delay to allow AuthSession to process the incoming redirect
 		// and populate the response used by the auth hook. Then navigate to

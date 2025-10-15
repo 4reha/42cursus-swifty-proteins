@@ -61,7 +61,6 @@ export default function HomeScreen() {
             style={styles.githubConnectButton}
             onPress={() => {
               // TODO: Implement GitHub connection for existing password users
-              console.log('Connect GitHub for password user');
             }}
           >
             <Ionicons name="logo-github" size={16} color="#fff" />

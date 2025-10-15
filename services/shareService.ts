@@ -1,13 +1,5 @@
 import { Alert, Share } from 'react-native';
-import { ParsedLigandData } from './ligandAPI';
-
-export interface ShareOptions {
-	ligandId: string;
-	data: ParsedLigandData | null;
-	svgUrl?: string;
-	svgXml?: string | null;
-	baseUrl?: string;
-}
+import { ShareOptions } from '@/types/types';
 
 // Note: SVG to image conversion requires additional setup
 // For now, we'll share the SVG URL directly

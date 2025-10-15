@@ -4,14 +4,20 @@ import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { Stack } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
+import { theme } from '@/styles/theme';
 
 function RootLayoutNav() {
   const { isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#007AFF" />
+      <View style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: theme.colors.background.primary
+      }}>
+        <ActivityIndicator size="large" color={theme.colors.text.white} />
       </View>
     );
   }
@@ -59,12 +65,12 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <FavoritesProvider>
-        <ToastProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <FavoritesProvider>
           <RootLayoutNav />
-        </ToastProvider>
-      </FavoritesProvider>
-    </AuthProvider>
+        </FavoritesProvider>
+      </AuthProvider>
+    </ToastProvider>
   );
 }

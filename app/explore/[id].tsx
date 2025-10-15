@@ -36,12 +36,11 @@ export default function ExploreDetail() {
 	const id = params.id.toString().toUpperCase();
 	const { showToast } = useToast();
 	const { setSharingInProgress } = useAuth();
-	const { isFavorite, toggleFavorite } = useFavorites();
-
-	console.log('ID:', id);
+	const { isFavorite, toggleFavorite, canAddFavorite, getFavoritesCount, getMaxFavorites } = useFavorites();
 
 	const [activeTab, setActiveTab] = useState<'2D' | '3D'>('3D'); // Start with 3D
 	const [refreshing, setRefreshing] = useState(false);
+	const [favoriteLoading, setFavoriteLoading] = useState(false);
 
 	const handleShare = async () => {
 		try {
@@ -54,8 +53,7 @@ export default function ExploreDetail() {
 				svgXml,
 			});
 			showToast('Ligand shared successfully!', 2000);
-		} catch (error) {
-			console.error('🔗 [SHARE] Share failed with error:', error);
+		} catch {
 			showToast('Failed to share ligand', 2000);
 		} finally {
 			// Use a small delay to ensure app state changes are processed first
@@ -66,7 +64,13 @@ export default function ExploreDetail() {
 	};
 
 	const handleToggleFavorite = async () => {
+		// Prevent multiple rapid clicks
+		if (favoriteLoading) return;
+
+		setFavoriteLoading(true);
+
 		try {
+			// Optimize: Prepare data only if needed
 			const proteinData = {
 				id,
 				name: data?.name || 'Unknown',
@@ -76,18 +80,12 @@ export default function ExploreDetail() {
 				bondCount: data?.bonds?.length || 0,
 			};
 
-			const wasFavorite = isFavorite(id);
+			// Fire and forget - let FavoritesContext handle toasts
 			await toggleFavorite(proteinData);
-
-
-			if (wasFavorite) {
-				showToast('Removed from favorites', 2000);
-			} else {
-				showToast('Added to favorites', 2000);
-			}
-		} catch (error) {
-			console.error('Error toggling favorite:', error);
+		} catch {
 			showToast('Failed to update favorites', 2000);
+		} finally {
+			setFavoriteLoading(false);
 		}
 	};
 
@@ -99,8 +97,8 @@ export default function ExploreDetail() {
 				refetchSvg(),
 				refetchCif()
 			]);
-		} catch (error) {
-			console.error('Error refreshing data:', error);
+		} catch {
+			showToast('Failed to refresh data', 3000);
 		} finally {
 			setRefreshing(false);
 		}
@@ -127,16 +125,7 @@ export default function ExploreDetail() {
 		if (!cifResp) return null;
 
 		try {
-			console.log('Parsing CIF data for:', id);
 			const parsed = parseCIFData(cifResp, id);
-			console.log('Parsed data:', {
-				id: parsed.id,
-				name: parsed.name,
-				atomCount: parsed.atoms?.length || 0,
-				bondCount: parsed.bonds?.length || 0,
-				firstAtom: parsed.atoms?.[0],
-				firstBond: parsed.bonds?.[0]
-			});
 
 			// Add SVG URL if available
 			if (svgUrl) {
@@ -144,11 +133,34 @@ export default function ExploreDetail() {
 			}
 
 			return parsed;
-		} catch (e) {
-			console.error('Failed to parse CIF data:', e);
+		} catch {
+			showToast('Failed to parse molecule data', 3000);
 			return null;
 		}
-	}, [cifResp, id, svgUrl]);
+	}, [cifResp, id, svgUrl, showToast]);
+
+	// Memoize the Molecule3D component to prevent unnecessary re-renders
+	const MemoizedMolecule3D = useMemo(() => {
+		if (!data || !data.atoms || data.atoms.length === 0) {
+			return (
+				<View style={styles.noDataContainer}>
+					<MCIcons name="molecule" size={64} color={theme.colors.text.whiteLight} />
+					<Text style={styles.noDataText}>
+						{!data ? 'Loading...' :
+							!data.atoms ? 'No atom data' :
+								data.atoms.length === 0 ? 'No atoms found' :
+									'No 3D structure available'}
+					</Text>
+					{data && data.atoms && data.atoms.length > 0 && (
+						<Text style={[styles.noDataText, { fontSize: 12, marginTop: 8 }]}>
+							Debug: {data.atoms.length} atoms, {data.bonds?.length || 0} bonds
+						</Text>
+					)}
+				</View>
+			);
+		}
+		return <Molecule3DViewer data={data} />;
+	}, [data]);
 
 	// SVG XML for 2D view
 	const svgXml = svgResp || null;
@@ -239,14 +251,36 @@ export default function ExploreDetail() {
 				<View style={styles.headerActions}>
 					<TouchableOpacity
 						onPress={handleToggleFavorite}
-						style={styles.favoriteButton}
-						accessibilityLabel={isFavorite(id) ? "Remove from favorites" : "Add to favorites"}
+						style={[
+							styles.favoriteButton,
+							(!isFavorite(id) && !canAddFavorite()) || favoriteLoading ? styles.favoriteButtonDisabled : null
+						]}
+						accessibilityLabel={
+							favoriteLoading
+								? "Updating favorites..."
+								: isFavorite(id)
+									? "Remove from favorites"
+									: canAddFavorite()
+										? "Add to favorites"
+										: `Favorites limit reached (${getFavoritesCount()}/${getMaxFavorites()})`
+						}
+						disabled={(!isFavorite(id) && !canAddFavorite()) || favoriteLoading}
 					>
-						<MCIcons
-							name={isFavorite(id) ? "heart" : "heart-outline"}
-							size={20}
-							color={isFavorite(id) ? "#FF3B30" : theme.colors.text.white}
-						/>
+						{favoriteLoading ? (
+							<ActivityIndicator size="small" color={theme.colors.text.white} />
+						) : (
+							<MCIcons
+								name={isFavorite(id) ? "heart" : "heart-outline"}
+								size={20}
+								color={
+									isFavorite(id)
+										? "#FF3B30"
+										: canAddFavorite()
+											? theme.colors.text.white
+											: theme.colors.text.whiteLight
+								}
+							/>
+						)}
 					</TouchableOpacity>
 					<TouchableOpacity onPress={handleShare} style={styles.shareButton} accessibilityLabel="Share ligand">
 						<MCIcons name="share-variant" size={20} color={theme.colors.text.white} />
@@ -309,24 +343,7 @@ export default function ExploreDetail() {
 			{/* Tab content */}
 			{activeTab === '3D' ? (
 				<View style={styles.viewerContainer}>
-					{data && data.atoms && data.atoms.length > 0 ? (
-						<Molecule3DViewer data={data} />
-					) : (
-						<View style={styles.noDataContainer}>
-							<MCIcons name="molecule" size={64} color={theme.colors.text.whiteLight} />
-							<Text style={styles.noDataText}>
-								{!data ? 'Loading...' :
-									!data.atoms ? 'No atom data' :
-										data.atoms.length === 0 ? 'No atoms found' :
-											'No 3D structure available'}
-							</Text>
-							{data && data.atoms && data.atoms.length > 0 && (
-								<Text style={[styles.noDataText, { fontSize: 12, marginTop: 8 }]}>
-									Debug: {data.atoms.length} atoms, {data.bonds?.length || 0} bonds
-								</Text>
-							)}
-						</View>
-					)}
+					{MemoizedMolecule3D}
 				</View>
 			) : (
 				<MoleculeInfo
@@ -367,6 +384,9 @@ const styles = StyleSheet.create({
 	},
 	favoriteButton: {
 		padding: theme.spacing.sm,
+	},
+	favoriteButtonDisabled: {
+		opacity: 0.5,
 	},
 	shareButton: {
 		padding: theme.spacing.sm,

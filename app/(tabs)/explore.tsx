@@ -1,5 +1,4 @@
 import { LIGANDS } from '@/config/ligands';
-import useFetch from '@/hooks/useFetch';
 import { globalStyles } from '@/styles/globalStyles';
 import { theme } from '@/styles/theme';
 import MCIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -11,7 +10,6 @@ import Animated, { FadeInUp, Layout } from 'react-native-reanimated';
 export default function ProteinsScreen() {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [isSearchFocused, setIsSearchFocused] = useState(false);
-	const [isWebSearch, setIsWebSearch] = useState(false);
 
 	const filteredLigands = useMemo(() => {
 		if (!searchQuery.trim()) return LIGANDS;
@@ -19,17 +17,6 @@ export default function ProteinsScreen() {
 			ligand.toLowerCase().includes(searchQuery.toLowerCase())
 		);
 	}, [searchQuery]);
-
-	// Web search API call using useFetch
-	const webSearchUrl = isWebSearch && searchQuery.trim()
-		? `https://www.rcsb.org/search/suggest/false/${(searchQuery.toUpperCase())}`
-		: '';
-
-	console.log('Web Search URL:', webSearchUrl);
-
-	const { data: webSearchData, loading: isWebSearchLoading, error: webSearchError } = useFetch(webSearchUrl);
-
-	console.log("Web Search Data:", webSearchData);
 
 	const clearSearch = () => {
 		setSearchQuery('');
@@ -111,7 +98,7 @@ export default function ProteinsScreen() {
 						style={{ marginRight: theme.spacing.sm }}
 					/>
 					<TextInput
-						placeholder={isWebSearch ? "Search local ligands & RCSB PDB..." : "Search local ligands..."}
+						placeholder={"Search local ligands..."}
 						placeholderTextColor={theme.colors.text.whiteLight}
 						style={[globalStyles.input, { flex: 1 }]}
 						value={searchQuery}
