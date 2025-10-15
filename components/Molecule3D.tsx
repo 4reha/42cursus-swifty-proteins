@@ -1,13 +1,23 @@
-import { useToast } from '@/contexts/ToastContext';
-import { ParsedLigandData } from '@/services/ligandAPI';
-import { theme } from '@/styles/theme';
-import MCIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { GLView } from 'expo-gl';
-import { Renderer } from 'expo-three';
-import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { GestureHandlerRootView, PanGestureHandler, PinchGestureHandler } from 'react-native-gesture-handler';
-import * as THREE from 'three';
+import { useToast } from "@/contexts/ToastContext";
+import { ParsedLigandData } from "@/types/ligand.types";
+import { theme } from "@/styles/theme";
+import MCIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { GLView } from "expo-gl";
+import { Renderer } from "expo-three";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import {
+  GestureHandlerRootView,
+  PanGestureHandler,
+  PinchGestureHandler,
+} from "react-native-gesture-handler";
+import * as THREE from "three";
 
 type Molecule3DViewerProps = {
   data: ParsedLigandData | null;
@@ -16,45 +26,50 @@ type Molecule3DViewerProps = {
 
 // CPK Colors (Corey-Pauling-Koltun coloring scheme)
 const CPK_COLORS: Record<string, number> = {
-  'H': 0xFFFFFF,  // White
-  'C': 0x909090,  // Gray
-  'N': 0x3050F8,  // Blue
-  'O': 0xFF0D0D,  // Red
-  'F': 0x90E050,  // Green
-  'CL': 0x1FF01F, // Green
-  'BR': 0xA62929, // Brown
-  'I': 0x940094,  // Purple
-  'P': 0xFF8000,  // Orange
-  'S': 0xFFFF30,  // Yellow
-  'B': 0xFFB5B5,  // Pink
-  'LI': 0xCC80FF, // Violet
-  'NA': 0xAB5CF2, // Violet
-  'MG': 0x8AFF00, // Green
-  'AL': 0xBFA6A6, // Gray
-  'SI': 0xF0C8A0, // Tan
-  'K': 0x8F40D4,  // Purple
-  'CA': 0x3DFF00, // Green
-  'TI': 0xBFC2C7, // Gray
-  'CR': 0x8A99C7, // Gray
-  'MN': 0x9C7AC7, // Gray
-  'FE': 0xE06633, // Orange
-  'NI': 0x50D050, // Green
-  'CU': 0xC88033, // Brown
-  'ZN': 0x7D80B0, // Blue-gray
-  'GA': 0xC28F8F, // Brown
-  'GE': 0x668F8F, // Gray
-  'AS': 0xBD80E3, // Purple
-  'SE': 0xFFA100, // Orange
-  'AG': 0xC0C0C0, // Silver
-  'SN': 0x668080, // Gray
-  'AU': 0xFFD123, // Gold
-  'HG': 0xB8B8D0, // Gray
+  H: 0xffffff, // White
+  C: 0x909090, // Gray
+  N: 0x3050f8, // Blue
+  O: 0xff0d0d, // Red
+  F: 0x90e050, // Green
+  CL: 0x1ff01f, // Green
+  BR: 0xa62929, // Brown
+  I: 0x940094, // Purple
+  P: 0xff8000, // Orange
+  S: 0xffff30, // Yellow
+  B: 0xffb5b5, // Pink
+  LI: 0xcc80ff, // Violet
+  NA: 0xab5cf2, // Violet
+  MG: 0x8aff00, // Green
+  AL: 0xbfa6a6, // Gray
+  SI: 0xf0c8a0, // Tan
+  K: 0x8f40d4, // Purple
+  CA: 0x3dff00, // Green
+  TI: 0xbfc2c7, // Gray
+  CR: 0x8a99c7, // Gray
+  MN: 0x9c7ac7, // Gray
+  FE: 0xe06633, // Orange
+  NI: 0x50d050, // Green
+  CU: 0xc88033, // Brown
+  ZN: 0x7d80b0, // Blue-gray
+  GA: 0xc28f8f, // Brown
+  GE: 0x668f8f, // Gray
+  AS: 0xbd80e3, // Purple
+  SE: 0xffa100, // Orange
+  AG: 0xc0c0c0, // Silver
+  SN: 0x668080, // Gray
+  AU: 0xffd123, // Gold
+  HG: 0xb8b8d0, // Gray
 };
 
-export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps) {
+export default function Molecule3DViewer({
+  data,
+  style,
+}: Molecule3DViewerProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [renderStyle, setRenderStyle] = useState<'stick' | 'sphere' | 'ballStick'>('ballStick');
+  const [renderStyle, setRenderStyle] = useState<
+    "stick" | "sphere" | "ballStick"
+  >("ballStick");
   const [autoRotate, setAutoRotate] = useState(true);
   const [glKey, setGlKey] = useState(0);
   const { showToast } = useToast();
@@ -76,7 +91,7 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
     if (data && data.atoms && data.atoms.length > 0) {
       setLoading(true);
       setError(null);
-      setGlKey(prev => prev + 1); // Force GLView remount
+      setGlKey((prev) => prev + 1); // Force GLView remount
     }
   }, [data]);
 
@@ -111,14 +126,14 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
 
   const getAtomColor = (element: string): number => {
     const el = element.toUpperCase();
-    return CPK_COLORS[el] || 0xFF1493; // Default: hot pink for unknown elements
+    return CPK_COLORS[el] || 0xff1493; // Default: hot pink for unknown elements
   };
 
-  const showStyleToast = (style: 'stick' | 'sphere' | 'ballStick') => {
+  const showStyleToast = (style: "stick" | "sphere" | "ballStick") => {
     const styleNames = {
-      'ballStick': 'Ball & Stick',
-      'sphere': 'Sphere',
-      'stick': 'Stick'
+      ballStick: "Ball & Stick",
+      sphere: "Sphere",
+      stick: "Stick",
     };
 
     showToast(`Switched to ${styleNames[style]} representation`, 2000);
@@ -133,9 +148,12 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
     const orderStr = String(order).toUpperCase();
 
     // Check for common bond order patterns
-    if (orderStr.includes('SING') || orderStr === '1' || orderStr === 'S') return 1;
-    if (orderStr.includes('DOUB') || orderStr === '2' || orderStr === 'D') return 2;
-    if (orderStr.includes('TRIP') || orderStr === '3' || orderStr === 'T') return 3;
+    if (orderStr.includes("SING") || orderStr === "1" || orderStr === "S")
+      return 1;
+    if (orderStr.includes("DOUB") || orderStr === "2" || orderStr === "D")
+      return 2;
+    if (orderStr.includes("TRIP") || orderStr === "3" || orderStr === "T")
+      return 3;
 
     // Try to parse as number
     const num = parseInt(orderStr);
@@ -153,7 +171,9 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
   ): THREE.Mesh => {
     const direction = new THREE.Vector3().subVectors(end, start);
     const length = direction.length();
-    const midpoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+    const midpoint = new THREE.Vector3()
+      .addVectors(start, end)
+      .multiplyScalar(0.5);
 
     const geometry = new THREE.CylinderGeometry(radius, radius, length, 8);
     const material = new THREE.MeshPhongMaterial({
@@ -192,15 +212,15 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
     if (bondOrder === 1) {
       // Single bond - one cylinder
       cylinders.push(createBondCylinder(start, end, bondRadius));
-    }
-    else if (bondOrder === 2) {
+    } else if (bondOrder === 2) {
       // Double bond - two parallel cylinders
       const direction = new THREE.Vector3().subVectors(end, start).normalize();
 
       // Calculate perpendicular offset
-      const up = Math.abs(direction.y) < 0.99
-        ? new THREE.Vector3(0, 1, 0)
-        : new THREE.Vector3(1, 0, 0);
+      const up =
+        Math.abs(direction.y) < 0.99
+          ? new THREE.Vector3(0, 1, 0)
+          : new THREE.Vector3(1, 0, 0);
 
       const perpendicular = new THREE.Vector3()
         .crossVectors(direction, up)
@@ -214,14 +234,14 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
 
       cylinders.push(createBondCylinder(start, end, bondRadius * 0.8, offset1));
       cylinders.push(createBondCylinder(start, end, bondRadius * 0.8, offset2));
-    }
-    else if (bondOrder === 3) {
+    } else if (bondOrder === 3) {
       // Triple bond - three cylinders in triangular arrangement
       const direction = new THREE.Vector3().subVectors(end, start).normalize();
 
-      const up = Math.abs(direction.y) < 0.99
-        ? new THREE.Vector3(0, 1, 0)
-        : new THREE.Vector3(1, 0, 0);
+      const up =
+        Math.abs(direction.y) < 0.99
+          ? new THREE.Vector3(0, 1, 0)
+          : new THREE.Vector3(1, 0, 0);
 
       const perpendicular = new THREE.Vector3()
         .crossVectors(direction, up)
@@ -243,7 +263,10 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
     return cylinders;
   };
 
-  const createMolecule = (scene: THREE.Scene, style: 'stick' | 'sphere' | 'ballStick' = renderStyle) => {
+  const createMolecule = (
+    scene: THREE.Scene,
+    style: "stick" | "sphere" | "ballStick" = renderStyle
+  ) => {
     const moleculeGroup = new THREE.Group();
 
     // Create atoms
@@ -253,13 +276,13 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
       const y = atom.idealY ?? atom.y ?? 0;
       const z = atom.idealZ ?? atom.z ?? 0;
 
-      const color = getAtomColor(atom.element || 'C');
+      const color = getAtomColor(atom.element || "C");
 
       // Sphere for atom
       let sphereRadius = 0.3;
-      if (style === 'sphere') {
+      if (style === "sphere") {
         sphereRadius = 0.5;
-      } else if (style === 'stick') {
+      } else if (style === "stick") {
         sphereRadius = 0.15;
       }
 
@@ -275,7 +298,7 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
       sphere.userData = {
         atomId: atom.atomId,
         element: atom.element,
-        type: 'atom'
+        type: "atom",
       };
 
       moleculeGroup.add(sphere);
@@ -284,8 +307,8 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
 
     // Create bonds with proper bond order
     data.bonds?.forEach((bond) => {
-      const atom1 = data.atoms?.find(a => a.atomId === bond.a);
-      const atom2 = data.atoms?.find(a => a.atomId === bond.b);
+      const atom1 = data.atoms?.find((a) => a.atomId === bond.a);
+      const atom2 = data.atoms?.find((a) => a.atomId === bond.b);
 
       if (atom1 && atom2) {
         const x1 = atom1.idealX ?? atom1.x ?? 0;
@@ -303,16 +326,16 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
         const bondOrder = parseBondOrder(bond.order);
 
         // Get appropriate bond radius
-        const bondRadius = style === 'stick' ? 0.1 : 0.08;
+        const bondRadius = style === "stick" ? 0.1 : 0.08;
 
         // Create bond cylinders based on order
         const bondCylinders = createBond(start, end, bondOrder, bondRadius);
 
-        bondCylinders.forEach(cylinder => {
+        bondCylinders.forEach((cylinder) => {
           cylinder.userData = {
-            type: 'bond',
+            type: "bond",
             order: bondOrder,
-            atoms: `${bond.a}-${bond.b}`
+            atoms: `${bond.a}-${bond.b}`,
           };
           moleculeGroup.add(cylinder);
         });
@@ -328,14 +351,18 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
     moleculeGroupRef.current = moleculeGroup;
 
     // Log bond information for debugging
-    console.log('🔗 Bonds created:');
-    data.bonds?.forEach(bond => {
+    console.log("🔗 Bonds created:");
+    data.bonds?.forEach((bond) => {
       const order = parseBondOrder(bond.order);
-      console.log(`  ${bond.a}-${bond.b}: ${order === 1 ? 'Single' : order === 2 ? 'Double' : 'Triple'} bond`);
+      console.log(
+        `  ${bond.a}-${bond.b}: ${
+          order === 1 ? "Single" : order === 2 ? "Double" : "Triple"
+        } bond`
+      );
     });
   };
 
-  const changeStyle = (newStyle: 'stick' | 'sphere' | 'ballStick') => {
+  const changeStyle = (newStyle: "stick" | "sphere" | "ballStick") => {
     setRenderStyle(newStyle);
     showStyleToast(newStyle);
 
@@ -393,7 +420,8 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
   };
 
   const onPanHandlerStateChange = (event: any) => {
-    if (event.nativeEvent.state === 5) { // ENDED
+    if (event.nativeEvent.state === 5) {
+      // ENDED
       lastPanRef.current = { x: 0, y: 0 };
     }
   };
@@ -416,7 +444,8 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
   };
 
   const onPinchHandlerStateChange = (event: any) => {
-    if (event.nativeEvent.state === 5) { // ENDED
+    if (event.nativeEvent.state === 5) {
+      // ENDED
       lastScaleRef.current = 1;
     }
   };
@@ -485,7 +514,7 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
 
       animate();
     } catch (err: any) {
-      console.error('Error initializing 3D scene:', err);
+      console.error("Error initializing 3D scene:", err);
       setError(err.message);
       setLoading(false);
     }
@@ -529,37 +558,50 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
       {/* Controls */}
       <View style={styles.controls}>
         <TouchableOpacity
-          style={[styles.controlButton, renderStyle === 'ballStick' && styles.controlButtonActive]}
-          onPress={() => changeStyle('ballStick')}
+          style={[
+            styles.controlButton,
+            renderStyle === "ballStick" && styles.controlButtonActive,
+          ]}
+          onPress={() => changeStyle("ballStick")}
         >
           <MCIcons name="atom" size={20} color="#ffffff" />
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.controlButton, renderStyle === 'sphere' && styles.controlButtonActive]}
-          onPress={() => changeStyle('sphere')}
+          style={[
+            styles.controlButton,
+            renderStyle === "sphere" && styles.controlButtonActive,
+          ]}
+          onPress={() => changeStyle("sphere")}
         >
           <MCIcons name="circle" size={20} color="#ffffff" />
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.controlButton, renderStyle === 'stick' && styles.controlButtonActive]}
-          onPress={() => changeStyle('stick')}
+          style={[
+            styles.controlButton,
+            renderStyle === "stick" && styles.controlButtonActive,
+          ]}
+          onPress={() => changeStyle("stick")}
         >
           <MCIcons name="minus" size={20} color="#ffffff" />
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.controlButton, autoRotate && styles.controlButtonActive]}
+          style={[
+            styles.controlButton,
+            autoRotate && styles.controlButtonActive,
+          ]}
           onPress={toggleAutoRotate}
         >
-          <MCIcons name={autoRotate ? "pause" : "play"} size={18} color="#ffffff" />
+          <MCIcons
+            name={autoRotate ? "pause" : "play"}
+            size={18}
+            color="#ffffff"
+          />
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.controlButton}
-          onPress={resetView}
-        >
+        <TouchableOpacity style={styles.controlButton} onPress={resetView}>
           <MCIcons name="restore" size={18} color="#ffffff" />
         </TouchableOpacity>
       </View>
@@ -569,63 +611,63 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
+    width: "100%",
     height: 500,
     borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: '#1a1a2e',
+    overflow: "hidden",
+    backgroundColor: "#1a1a2e",
   },
   glView: {
     flex: 1,
   },
   loadingContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#1a1a2e',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#1a1a2e",
     zIndex: 10,
     gap: 12,
   },
   loadingText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 14,
   },
   errorContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#1a1a2e',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#1a1a2e",
     zIndex: 10,
     padding: 20,
   },
   errorText: {
-    color: '#ff6b6b',
+    color: "#ff6b6b",
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
   },
   noDataContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     gap: 12,
   },
   noDataText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 14,
   },
   controls: {
-    position: 'absolute',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: "absolute",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
     top: 10,
     left: 0,
@@ -633,38 +675,38 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   controlButton: {
-    backgroundColor: 'rgba(102, 126, 234, 0.9)',
+    backgroundColor: "rgba(102, 126, 234, 0.9)",
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderRadius: 8,
     minWidth: 40,
     minHeight: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
-    borderColor: 'transparent',
+    borderColor: "transparent",
   },
   controlButtonActive: {
-    backgroundColor: 'rgba(102, 126, 234, 1)',
+    backgroundColor: "rgba(102, 126, 234, 1)",
     borderWidth: 1,
     borderColor: theme.colors.border.light,
   },
   controlText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   infoOverlay: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 10,
     left: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
     padding: 10,
     borderRadius: 8,
     zIndex: 100,
   },
   infoText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 11,
   },
 });
