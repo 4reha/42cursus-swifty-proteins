@@ -18,47 +18,11 @@ import {
   PinchGestureHandler,
 } from "react-native-gesture-handler";
 import * as THREE from "three";
+import { CPK_COLORS } from "@/constants/colors";
 
 type Molecule3DViewerProps = {
   data: ParsedLigandData | null;
   style?: any;
-};
-
-// CPK Colors (Corey-Pauling-Koltun coloring scheme)
-const CPK_COLORS: Record<string, number> = {
-  H: 0xffffff, // White
-  C: 0x909090, // Gray
-  N: 0x3050f8, // Blue
-  O: 0xff0d0d, // Red
-  F: 0x90e050, // Green
-  CL: 0x1ff01f, // Green
-  BR: 0xa62929, // Brown
-  I: 0x940094, // Purple
-  P: 0xff8000, // Orange
-  S: 0xffff30, // Yellow
-  B: 0xffb5b5, // Pink
-  LI: 0xcc80ff, // Violet
-  NA: 0xab5cf2, // Violet
-  MG: 0x8aff00, // Green
-  AL: 0xbfa6a6, // Gray
-  SI: 0xf0c8a0, // Tan
-  K: 0x8f40d4, // Purple
-  CA: 0x3dff00, // Green
-  TI: 0xbfc2c7, // Gray
-  CR: 0x8a99c7, // Gray
-  MN: 0x9c7ac7, // Gray
-  FE: 0xe06633, // Orange
-  NI: 0x50d050, // Green
-  CU: 0xc88033, // Brown
-  ZN: 0x7d80b0, // Blue-gray
-  GA: 0xc28f8f, // Brown
-  GE: 0x668f8f, // Gray
-  AS: 0xbd80e3, // Purple
-  SE: 0xffa100, // Orange
-  AG: 0xc0c0c0, // Silver
-  SN: 0x668080, // Gray
-  AU: 0xffd123, // Gold
-  HG: 0xb8b8d0, // Gray
 };
 
 export default function Molecule3DViewer({
