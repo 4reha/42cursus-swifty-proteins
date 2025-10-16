@@ -13,7 +13,7 @@ import * as AuthSession from "expo-auth-session";
 import { useCallback, useEffect, useState } from "react";
 
 export interface UseGitHubAuthReturn {
-  loginWithGitHub: () => Promise<void>;
+  loginWithGitHub: () => Promise<boolean>;
   isOAuthInProgress: boolean;
 }
 
@@ -109,13 +109,14 @@ export function useGitHubAuth(
       logger.warning("OAuth cancelled by user");
       setIsLoading(false);
       setIsOAuthInProgress(false);
+      // Don't throw error for cancellation - just reset state
     }
   }, [response, handleGitHubAuthSuccess, setIsLoading]);
 
   /**
    * Initiate GitHub OAuth flow
    */
-  const loginWithGitHub = useCallback(async () => {
+  const loginWithGitHub = useCallback(async (): Promise<boolean> => {
     try {
       setIsLoading(true);
       setIsOAuthInProgress(true);
@@ -127,21 +128,25 @@ export function useGitHubAuth(
         logger.error("OAuth request not ready");
         setIsLoading(false);
         setIsOAuthInProgress(false);
-        return;
+        return false;
       }
 
       const result = await promptAsync();
       logger.oauth("GitHub login result", result.type);
 
-      if (result.type !== "success") {
+      if (result.type === "success") {
+        // Success will be handled by the useEffect
+        return true;
+      } else {
         setIsLoading(false);
         setIsOAuthInProgress(false);
+        return false;
       }
     } catch (error) {
       logger.error("GitHub login error", error);
       setIsLoading(false);
       setIsOAuthInProgress(false);
-      throw error;
+      return false;
     }
   }, [request, promptAsync, setIsLoading]);
 

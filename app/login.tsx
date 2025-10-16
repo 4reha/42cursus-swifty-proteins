@@ -94,10 +94,10 @@ export default function LoginScreen() {
   const handleGitHubAuth = async () => {
     try {
       setAuthLoading(true);
-      await loginWithGitHub();
+      const success = await loginWithGitHub();
 
-      // Show biometric setup prompt after successful login
-      if (isBiometricSupported && isBiometricEnrolled && !isBiometricEnabled) {
+      // Only show biometric setup prompt if login was successful
+      if (success && isBiometricSupported && isBiometricEnrolled && !isBiometricEnabled) {
         // Add a longer delay to ensure authentication state is fully updated
         setTimeout(() => {
           Alert.alert(

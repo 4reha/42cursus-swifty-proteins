@@ -32,7 +32,7 @@ interface AuthContextType {
 
 	// Auth methods
 	loginWithPassword: (email: string, password: string) => Promise<void>;
-	loginWithGitHub: () => Promise<void>;
+	loginWithGitHub: () => Promise<boolean>;
 	loginWithBiometric: () => Promise<boolean>;
 	logout: () => Promise<void>;
 
