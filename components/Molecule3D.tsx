@@ -304,7 +304,7 @@ export default function Molecule3DViewer({
       // Sphere for atom
       let sphereRadius = 0.3;
       if (style === "sphere") {
-        sphereRadius = 0.5;
+        sphereRadius = 0.7; // Larger spheres for better space-filling
       } else if (style === "stick") {
         sphereRadius = 0.15;
       }
@@ -328,42 +328,44 @@ export default function Molecule3DViewer({
       atomMeshes.push(sphere);
     });
 
-    // Create bonds with proper bond order
-    data.bonds?.forEach((bond) => {
-      const atom1 = data.atoms?.find((a) => a.atomId === bond.a);
-      const atom2 = data.atoms?.find((a) => a.atomId === bond.b);
+    // Create bonds with proper bond order (skip for sphere model)
+    if (style !== "sphere") {
+      data.bonds?.forEach((bond) => {
+        const atom1 = data.atoms?.find((a) => a.atomId === bond.a);
+        const atom2 = data.atoms?.find((a) => a.atomId === bond.b);
 
-      if (atom1 && atom2) {
-        const x1 = atom1.idealX ?? atom1.x ?? 0;
-        const y1 = atom1.idealY ?? atom1.y ?? 0;
-        const z1 = atom1.idealZ ?? atom1.z ?? 0;
+        if (atom1 && atom2) {
+          const x1 = atom1.idealX ?? atom1.x ?? 0;
+          const y1 = atom1.idealY ?? atom1.y ?? 0;
+          const z1 = atom1.idealZ ?? atom1.z ?? 0;
 
-        const x2 = atom2.idealX ?? atom2.x ?? 0;
-        const y2 = atom2.idealY ?? atom2.y ?? 0;
-        const z2 = atom2.idealZ ?? atom2.z ?? 0;
+          const x2 = atom2.idealX ?? atom2.x ?? 0;
+          const y2 = atom2.idealY ?? atom2.y ?? 0;
+          const z2 = atom2.idealZ ?? atom2.z ?? 0;
 
-        const start = new THREE.Vector3(x1, y1, z1);
-        const end = new THREE.Vector3(x2, y2, z2);
+          const start = new THREE.Vector3(x1, y1, z1);
+          const end = new THREE.Vector3(x2, y2, z2);
 
-        // Parse bond order
-        const bondOrder = parseBondOrder(bond.order);
+          // Parse bond order
+          const bondOrder = parseBondOrder(bond.order);
 
-        // Get appropriate bond radius
-        const bondRadius = style === "stick" ? 0.1 : 0.08;
+          // Get appropriate bond radius
+          const bondRadius = style === "stick" ? 0.1 : 0.08;
 
-        // Create bond cylinders based on order
-        const bondCylinders = createBond(start, end, bondOrder, bondRadius);
+          // Create bond cylinders based on order
+          const bondCylinders = createBond(start, end, bondOrder, bondRadius);
 
-        bondCylinders.forEach((cylinder) => {
-          cylinder.userData = {
-            type: "bond",
-            order: bondOrder,
-            atoms: `${bond.a}-${bond.b}`,
-          };
-          moleculeGroup.add(cylinder);
-        });
-      }
-    });
+          bondCylinders.forEach((cylinder) => {
+            cylinder.userData = {
+              type: "bond",
+              order: bondOrder,
+              atoms: `${bond.a}-${bond.b}`,
+            };
+            moleculeGroup.add(cylinder);
+          });
+        }
+      });
+    }
 
     // Center the molecule
     const box = new THREE.Box3().setFromObject(moleculeGroup);
