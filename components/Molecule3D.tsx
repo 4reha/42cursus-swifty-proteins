@@ -9,6 +9,7 @@ import { GestureHandlerRootView, PanGestureHandler, PinchGestureHandler } from '
 import * as THREE from 'three';
 import { Molecule3DViewerProps } from '@/types/types';
 import { CPK_COLORS } from '@/constants';
+// import Constants from 'expo-constants';
 
 
 export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps) {
@@ -33,6 +34,8 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
 
   // Track previous data to detect actual changes
   const prevDataRef = useRef<any>(null);
+
+  // const isSimulator = Platform.OS === 'ios' && !Constants.isDevice;
 
   // Reset loading state and force GLView remount when data changes
   useEffect(() => {
@@ -69,6 +72,24 @@ export default function Molecule3DViewer({ data, style }: Molecule3DViewerProps)
       }
     };
   }, []);
+
+  // Show simulator warning
+  // if (isSimulator) {
+  //   return (
+  //     <View style={[styles.container, style]}>
+  //       <View style={styles.simulatorContainer}>
+  //         <MCIcons name="cellphone" size={64} color="#667eea" />
+  //         <Text style={styles.simulatorTitle}>3D Viewer Unavailable</Text>
+  //         <Text style={styles.simulatorText}>
+  //           The 3D molecule viewer is not supported in iOS Simulator due to OpenGL limitations.
+  //         </Text>
+  //         <Text style={styles.simulatorSubtext}>
+  //           Please test on a physical iOS device for full 3D functionality.
+  //         </Text>
+  //       </View>
+  //     </View>
+  //   );
+  // }
 
   if (!data || !data.atoms || data.atoms.length === 0) {
     return (
@@ -587,6 +608,35 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 14,
   },
+
+  // // Simulator warning
+  // simulatorContainer: {
+  //   flex: 1,
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   gap: 16,
+  //   padding: 20,
+  // },
+  // simulatorTitle: {
+  //   color: '#ffffff',
+  //   fontSize: 18,
+  //   fontWeight: 'bold',
+  //   textAlign: 'center',
+  // },
+  // simulatorText: {
+  //   color: '#ffffff',
+  //   fontSize: 14,
+  //   textAlign: 'center',
+  //   lineHeight: 20,
+  // },
+  // simulatorSubtext: {
+  //   color: '#667eea',
+  //   fontSize: 12,
+  //   textAlign: 'center',
+  //   fontStyle: 'italic',
+  // },
+
+  // Controls
   controls: {
     position: 'absolute',
     flexDirection: 'row',
