@@ -38,6 +38,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ExploreDetail() {
   const params = useLocalSearchParams();
@@ -45,6 +46,7 @@ export default function ExploreDetail() {
   const { showToast } = useToast();
   const { setSharingInProgress } = useAuth();
   const { isFavorite, toggleFavorite, canAddFavorite, getFavoritesCount, getMaxFavorites } = useFavorites();
+  const insets = useSafeAreaInsets();
 
   const [activeTab, setActiveTab] = useState<"2D" | "3D">("3D"); // Start with 3D
   const [refreshing, setRefreshing] = useState(false);
@@ -183,7 +185,7 @@ export default function ExploreDetail() {
     return (
       <View style={globalStyles.container}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + theme.spacing.sm }]}>
           <View style={styles.leftGroup}>
             <TouchableOpacity
               onPress={() => NavigationService.goBack()}
@@ -212,7 +214,7 @@ export default function ExploreDetail() {
     return (
       <View style={globalStyles.container}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + theme.spacing.sm }]}>
           <View style={styles.leftGroup}>
             <TouchableOpacity
               onPress={() => NavigationService.goBack()}
@@ -257,7 +259,7 @@ export default function ExploreDetail() {
       }
     >
       {/* Header with back button and share button */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + theme.spacing.sm }]}>
         <View style={styles.leftGroup}>
           <TouchableOpacity
             onPress={() => NavigationService.goBack()}
@@ -425,7 +427,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing["2xl"],
     paddingBottom: theme.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border.medium,
