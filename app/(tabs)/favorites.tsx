@@ -124,7 +124,7 @@ export default function FavoritesScreen() {
         <FlatList
           data={favorites}
           renderItem={renderFavoriteItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => `favorite-${item.id || index}`}
           contentContainerStyle={{
             paddingHorizontal: theme.spacing.xl,
             paddingBottom: theme.spacing.xl,

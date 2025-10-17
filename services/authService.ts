@@ -14,10 +14,9 @@ import { BiometricStorageService, UserStorageService } from "./storageService";
 export class AuthService {
   /**
    * Simple password hashing (NOT SECURE - for demo only)
-   * In production, use a proper backend with bcrypt/argon2
    */
   private static hashPassword(password: string): string {
-    return btoa(password + "salt_key_swifty_protein");
+    return Buffer.from(password + "salt_key_swifty_protein").toString("base64");
   }
 
   /**
@@ -65,15 +64,13 @@ export class AuthService {
     const normalizedEmail = normalizeEmail(email);
     logger.auth(`Password login attempt: ${normalizedEmail}`);
 
-    // Check if account exists
-    const existingUser = await UserStorageService.getUserByMethod("password");
+    // Check if this specific user exists
+    const existingUser = await UserStorageService.getPasswordUserByEmail(
+      normalizedEmail
+    );
 
     if (existingUser) {
-      // Verify existing account
-      if (existingUser.email !== normalizedEmail) {
-        throw new Error("Invalid email or password");
-      }
-
+      // Verify password for existing user
       if (
         !existingUser.hashedPassword ||
         !this.verifyPassword(password, existingUser.hashedPassword)
@@ -81,10 +78,12 @@ export class AuthService {
         throw new Error("Invalid email or password");
       }
 
+      // Update current user in storage
+      await UserStorageService.storeUser(existingUser);
       logger.success("Password login successful (existing account)");
       return existingUser;
     } else {
-      // Create new account
+      // Create new account for this email
       logger.info("No existing account, creating new one");
       return await this.createPasswordAccount(normalizedEmail, password);
     }
@@ -257,11 +256,28 @@ export class AuthService {
   }
 
   /**
+   * Check if a specific password user exists
+   */
+  static async hasPasswordAccount(email: string): Promise<boolean> {
+    const normalizedEmail = normalizeEmail(email);
+    return await UserStorageService.hasPasswordUser(normalizedEmail);
+  }
+
+  /**
    * Clear password account data
    */
   static async clearPasswordAccount(): Promise<void> {
     await UserStorageService.deleteUser("password");
     logger.info("Password account cleared");
+  }
+
+  /**
+   * Clear a specific password account by email
+   */
+  static async clearPasswordAccountByEmail(email: string): Promise<void> {
+    const normalizedEmail = normalizeEmail(email);
+    await UserStorageService.deletePasswordUser(normalizedEmail);
+    logger.info(`Password account cleared: ${normalizedEmail}`);
   }
 
   /**
