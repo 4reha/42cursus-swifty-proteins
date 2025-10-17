@@ -16,7 +16,7 @@ export class AuthService {
    * Simple password hashing (NOT SECURE - for demo only)
    */
   private static hashPassword(password: string): string {
-    return Buffer.from(password + "salt_key_swifty_protein").toString("base64");
+    return btoa(password + "salt_key_swifty_protein");
   }
 
   /**
