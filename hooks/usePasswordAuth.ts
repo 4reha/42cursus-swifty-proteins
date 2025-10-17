@@ -12,9 +12,9 @@ import { useCallback } from "react";
 
 export interface UsePasswordAuthReturn {
   loginWithPassword: (email: string, password: string) => Promise<void>;
-  hasPasswordAccount: () => Promise<boolean>;
+  hasPasswordAccount: (email?: string) => Promise<boolean>;
   hasGitHubAccount: () => Promise<boolean>;
-  clearPasswordAccount: () => Promise<void>;
+  clearPasswordAccount: (email?: string) => Promise<void>;
 }
 
 export interface UsePasswordAuthOptions {
@@ -104,10 +104,18 @@ export function usePasswordAuth(
 
   /**
    * Check if password account exists
+   * If email is provided, check for that specific user
+   * Otherwise, check if any password user exists
    */
-  const hasPasswordAccount = useCallback(async (): Promise<boolean> => {
-    return UserStorageService.hasUser("password");
-  }, []);
+  const hasPasswordAccount = useCallback(
+    async (email?: string): Promise<boolean> => {
+      if (email) {
+        return AuthService.hasPasswordAccount(email);
+      }
+      return UserStorageService.hasUser("password");
+    },
+    []
+  );
 
   /**
    * Check if GitHub account exists
@@ -118,11 +126,17 @@ export function usePasswordAuth(
 
   /**
    * Clear password account
+   * If email is provided, clear that specific user
+   * Otherwise, clear the current password user
    */
-  const clearPasswordAccount = useCallback(async () => {
+  const clearPasswordAccount = useCallback(async (email?: string) => {
     try {
       logger.auth("Clearing stored password account...");
-      await UserStorageService.deleteUser("password");
+      if (email) {
+        await AuthService.clearPasswordAccountByEmail(email);
+      } else {
+        await UserStorageService.deleteUser("password");
+      }
       logger.success("Password account cleared");
     } catch (error) {
       logger.error("Error clearing password account", error);

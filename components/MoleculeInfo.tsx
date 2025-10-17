@@ -116,11 +116,11 @@ export default function MoleculeInfo({
                 </Text>
                 <Text style={[styles.tableCell, { flex: 2 }]}>
                   {a.idealX !== undefined &&
-                  a.idealY !== undefined &&
-                  a.idealZ !== undefined
+                    a.idealY !== undefined &&
+                    a.idealZ !== undefined
                     ? `(${a.idealX.toFixed(3)}, ${a.idealY.toFixed(
-                        3
-                      )}, ${a.idealZ.toFixed(3)})`
+                      3
+                    )}, ${a.idealZ.toFixed(3)})`
                     : "-"}
                 </Text>
               </View>

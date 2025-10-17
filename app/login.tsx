@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Platform,
   ScrollView,
   Text,
@@ -44,12 +45,8 @@ export default function LoginScreen() {
 
   useEffect(() => {
     checkAccounts();
-    console.log('🔍 Login screen loaded with biometric state:', {
-      isBiometricSupported,
-      isBiometricEnrolled,
-      isBiometricEnabled
-    });
-  }, [checkAccounts, isBiometricSupported, isBiometricEnrolled, isBiometricEnabled]);
+
+  }, [checkAccounts, isBiometricSupported, isBiometricEnrolled, isBiometricEnabled, isLoading]);
 
   const handlePasswordAuth = async () => {
     if (!email || !password) {
@@ -59,27 +56,12 @@ export default function LoginScreen() {
 
     try {
       setAuthLoading(true);
-      console.log('🔐 Starting password authentication...');
       await loginWithPassword(email, password);
-      console.log('✅ Password authentication successful');
 
       // Show biometric setup prompt after successful login
       if (isBiometricSupported && isBiometricEnrolled && !isBiometricEnabled) {
-        console.log('🔍 Biometric setup conditions met:', {
-          isBiometricSupported,
-          isBiometricEnrolled,
-          isBiometricEnabled
-        });
-
-        console.log('🔍 Current auth state before prompt:', {
-          isBiometricSupported,
-          isBiometricEnrolled,
-          isBiometricEnabled
-        });
-
         // Add a longer delay to ensure authentication state is fully updated
         setTimeout(() => {
-          console.log('⏰ Showing biometric setup prompt after delay');
           Alert.alert(
             'Enable Biometric Login',
             'Would you like to enable biometric authentication for faster login next time?',
@@ -89,15 +71,11 @@ export default function LoginScreen() {
                 text: 'Enable',
                 onPress: async () => {
                   try {
-                    console.log('🔑 User chose to enable biometric authentication');
                     // Wait a bit more to ensure state is updated
                     await new Promise(resolve => setTimeout(resolve, 200));
-                    console.log('⏳ Calling enableBiometric...');
                     await enableBiometric();
-                    console.log('✅ Biometric authentication enabled successfully');
                     showToast('Biometric authentication enabled!');
-                  } catch (error) {
-                    console.error('❌ Failed to enable biometric authentication:', error);
+                  } catch {
                     showToast('Failed to enable biometric authentication');
                   }
                 }
@@ -105,15 +83,8 @@ export default function LoginScreen() {
             ]
           );
         }, 2000);
-      } else {
-        console.log('ℹ️ Biometric setup not needed:', {
-          isBiometricSupported,
-          isBiometricEnrolled,
-          isBiometricEnabled
-        });
       }
     } catch (error: any) {
-      console.log('⚠️ Authentication failed:', error.message);
       showToast(error.message || 'Authentication failed');
     } finally {
       setAuthLoading(false);
@@ -123,27 +94,12 @@ export default function LoginScreen() {
   const handleGitHubAuth = async () => {
     try {
       setAuthLoading(true);
-      console.log('🐙 Starting GitHub authentication...');
-      await loginWithGitHub();
-      console.log('✅ GitHub authentication successful');
+      const success = await loginWithGitHub();
 
-      // Show biometric setup prompt after successful login
-      if (isBiometricSupported && isBiometricEnrolled && !isBiometricEnabled) {
-        console.log('🔍 Biometric setup conditions met for GitHub:', {
-          isBiometricSupported,
-          isBiometricEnrolled,
-          isBiometricEnabled
-        });
-
-        console.log('🔍 Current auth state before prompt (GitHub):', {
-          isBiometricSupported,
-          isBiometricEnrolled,
-          isBiometricEnabled
-        });
-
+      // Only show biometric setup prompt if login was successful
+      if (success && isBiometricSupported && isBiometricEnrolled && !isBiometricEnabled) {
         // Add a longer delay to ensure authentication state is fully updated
         setTimeout(() => {
-          console.log('⏰ Showing biometric setup prompt after delay (GitHub)');
           Alert.alert(
             'Enable Biometric Login',
             'Would you like to enable biometric authentication for faster login next time?',
@@ -153,15 +109,11 @@ export default function LoginScreen() {
                 text: 'Enable',
                 onPress: async () => {
                   try {
-                    console.log('🔑 User chose to enable biometric authentication (GitHub)');
                     // Wait a bit more to ensure state is updated
                     await new Promise(resolve => setTimeout(resolve, 200));
-                    console.log('⏳ Calling enableBiometric... (GitHub)');
                     await enableBiometric();
-                    console.log('✅ Biometric authentication enabled successfully (GitHub)');
                     showToast('Biometric authentication enabled!');
-                  } catch (error) {
-                    console.error('❌ Failed to enable biometric authentication (GitHub):', error);
+                  } catch {
                     showToast('Failed to enable biometric authentication');
                   }
                 }
@@ -169,15 +121,8 @@ export default function LoginScreen() {
             ]
           );
         }, 2000);
-      } else {
-        console.log('ℹ️ Biometric setup not needed for GitHub:', {
-          isBiometricSupported,
-          isBiometricEnrolled,
-          isBiometricEnabled
-        });
       }
     } catch (error: any) {
-      console.log('⚠️ GitHub authentication failed:', error.message);
       showToast(error.message || 'Failed to authenticate with GitHub');
     } finally {
       setAuthLoading(false);
@@ -190,11 +135,9 @@ export default function LoginScreen() {
       const success = await loginWithBiometric();
 
       if (!success) {
-        console.log('⚠️ Biometric authentication was not successful');
         showToast('Biometric authentication was not successful');
       }
     } catch (error: any) {
-      console.log('⚠️ Biometric authentication failed:', error.message);
       showToast(error.message || 'Biometric authentication failed');
     } finally {
       setAuthLoading(false);
@@ -211,8 +154,23 @@ export default function LoginScreen() {
 
   if (isLoading || authLoading) {
     return (
-      <View style={globalStyles.loadingContainer}>
+      <View style={[globalStyles.loadingContainer, { backgroundColor: theme.colors.background.primary }]}>
+        {/* App Logo */}
+        <View style={globalStyles.logoContainer}>
+          <Image
+            source={require('@/assets/icon.png')}
+            style={{
+              width: 80,
+              height: 80,
+              resizeMode: 'contain'
+            }}
+          />
+        </View>
+
+        {/* Loading Spinner */}
         <ActivityIndicator size="large" color={theme.colors.text.white} />
+
+        {/* Loading Text */}
         <Text style={[globalStyles.bodyText, { color: theme.colors.text.white, marginTop: theme.spacing.lg }]}>
           Authenticating...
         </Text>
@@ -241,7 +199,14 @@ export default function LoginScreen() {
         {isBiometricSupported && isBiometricEnrolled && isBiometricEnabled && (
           <>
             <TouchableOpacity
-              style={[globalStyles.buttonBase, globalStyles.buttonPrimary]}
+              style={[globalStyles.buttonBase, globalStyles.buttonPrimary, {
+                backgroundColor: theme.colors.success,
+                shadowColor: theme.colors.shadow.medium,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 4
+              }]}
               onPress={handleBiometricAuth}
               disabled={authLoading}
             >
@@ -263,7 +228,11 @@ export default function LoginScreen() {
 
         {/* Password Login Button */}
         <TouchableOpacity
-          style={[globalStyles.buttonBase, { backgroundColor: theme.colors.background.card }]}
+          style={[globalStyles.buttonBase, {
+            backgroundColor: theme.colors.background.card,
+            borderWidth: 1,
+            borderColor: theme.colors.border.medium
+          }]}
           onPress={() => setShowPasswordForm(!showPasswordForm)}
         >
           <View style={globalStyles.buttonContent}>
@@ -327,7 +296,16 @@ export default function LoginScreen() {
 
         {/* GitHub Login Button */}
         <TouchableOpacity
-          style={[globalStyles.buttonBase, globalStyles.buttonPrimary, { borderWidth: 2, borderColor: theme.colors.text.white }]}
+          style={[globalStyles.buttonBase, globalStyles.buttonPrimary, {
+            borderWidth: 2,
+            borderColor: theme.colors.text.white,
+            backgroundColor: theme.colors.github,
+            shadowColor: theme.colors.shadow.medium,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 4
+          }]}
           onPress={handleGitHubAuth}
           disabled={authLoading}
         >

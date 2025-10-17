@@ -38,16 +38,19 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ExploreDetail() {
   const params = useLocalSearchParams();
   const id = params.id.toString().toUpperCase();
   const { showToast } = useToast();
   const { setSharingInProgress } = useAuth();
-  const { isFavorite, toggleFavorite } = useFavorites();
+  const { isFavorite, toggleFavorite, canAddFavorite, getFavoritesCount, getMaxFavorites } = useFavorites();
+  const insets = useSafeAreaInsets();
 
   const [activeTab, setActiveTab] = useState<"2D" | "3D">("3D"); // Start with 3D
   const [refreshing, setRefreshing] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   const handleShare = async () => {
     try {
@@ -72,6 +75,7 @@ export default function ExploreDetail() {
   };
 
   const handleToggleFavorite = async () => {
+    setFavoriteLoading(true);
     try {
       const proteinData = {
         id,
@@ -93,6 +97,8 @@ export default function ExploreDetail() {
     } catch (error) {
       const errorMessage = ErrorHandler.handle(error, "Favorites");
       showToast(errorMessage, 2000);
+    } finally {
+      setFavoriteLoading(false);
     }
   };
 
@@ -179,7 +185,7 @@ export default function ExploreDetail() {
     return (
       <View style={globalStyles.container}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + theme.spacing.sm }]}>
           <View style={styles.leftGroup}>
             <TouchableOpacity
               onPress={() => NavigationService.goBack()}
@@ -208,7 +214,7 @@ export default function ExploreDetail() {
     return (
       <View style={globalStyles.container}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + theme.spacing.sm }]}>
           <View style={styles.leftGroup}>
             <TouchableOpacity
               onPress={() => NavigationService.goBack()}
@@ -253,7 +259,7 @@ export default function ExploreDetail() {
       }
     >
       {/* Header with back button and share button */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + theme.spacing.sm }]}>
         <View style={styles.leftGroup}>
           <TouchableOpacity
             onPress={() => NavigationService.goBack()}
@@ -277,16 +283,36 @@ export default function ExploreDetail() {
         <View style={styles.headerActions}>
           <TouchableOpacity
             onPress={handleToggleFavorite}
-            style={styles.favoriteButton}
+            style={[
+              styles.favoriteButton,
+              (!isFavorite(id) && !canAddFavorite()) || favoriteLoading ? styles.favoriteButtonDisabled : null
+            ]}
             accessibilityLabel={
-              isFavorite(id) ? "Remove from favorites" : "Add to favorites"
+              favoriteLoading
+                ? "Updating favorites..."
+                : isFavorite(id)
+                  ? "Remove from favorites"
+                  : canAddFavorite()
+                    ? "Add to favorites"
+                    : `Favorites limit reached (${getFavoritesCount()}/${getMaxFavorites()})`
             }
+            disabled={(!isFavorite(id) && !canAddFavorite()) || favoriteLoading}
           >
-            <MCIcons
-              name={isFavorite(id) ? "heart" : "heart-outline"}
-              size={20}
-              color={isFavorite(id) ? "#FF3B30" : theme.colors.text.white}
-            />
+            {favoriteLoading ? (
+              <ActivityIndicator size="small" color={theme.colors.text.white} />
+            ) : (
+              <MCIcons
+                name={isFavorite(id) ? "heart" : "heart-outline"}
+                size={20}
+                color={
+                  isFavorite(id)
+                    ? "#FF3B30"
+                    : canAddFavorite()
+                      ? theme.colors.text.white
+                      : theme.colors.text.whiteLight
+                }
+              />
+            )}
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleShare}
@@ -368,10 +394,10 @@ export default function ExploreDetail() {
                 {!data
                   ? "Loading..."
                   : !data.atoms
-                  ? "No atom data"
-                  : data.atoms.length === 0
-                  ? "No atoms found"
-                  : "No 3D structure available"}
+                    ? "No atom data"
+                    : data.atoms.length === 0
+                      ? "No atoms found"
+                      : "No 3D structure available"}
               </Text>
               {data?.atoms && data.atoms.length > 0 && (
                 <Text
@@ -401,7 +427,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing["2xl"],
     paddingBottom: theme.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border.medium,
@@ -423,6 +448,9 @@ const styles = StyleSheet.create({
   },
   favoriteButton: {
     padding: theme.spacing.sm,
+  },
+  favoriteButtonDisabled: {
+    opacity: 0.5,
   },
   shareButton: {
     padding: theme.spacing.sm,

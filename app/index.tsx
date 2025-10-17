@@ -1,4 +1,3 @@
-// app/index.tsx
 import { useAuth } from "@/contexts/AuthContext";
 import { NavigationService } from "@/services/navigationService";
 import { useEffect } from "react";

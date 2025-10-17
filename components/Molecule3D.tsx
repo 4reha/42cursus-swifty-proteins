@@ -18,47 +18,11 @@ import {
   PinchGestureHandler,
 } from "react-native-gesture-handler";
 import * as THREE from "three";
+import { CPK_COLORS } from "@/constants/colors";
 
 type Molecule3DViewerProps = {
   data: ParsedLigandData | null;
   style?: any;
-};
-
-// CPK Colors (Corey-Pauling-Koltun coloring scheme)
-const CPK_COLORS: Record<string, number> = {
-  H: 0xffffff, // White
-  C: 0x909090, // Gray
-  N: 0x3050f8, // Blue
-  O: 0xff0d0d, // Red
-  F: 0x90e050, // Green
-  CL: 0x1ff01f, // Green
-  BR: 0xa62929, // Brown
-  I: 0x940094, // Purple
-  P: 0xff8000, // Orange
-  S: 0xffff30, // Yellow
-  B: 0xffb5b5, // Pink
-  LI: 0xcc80ff, // Violet
-  NA: 0xab5cf2, // Violet
-  MG: 0x8aff00, // Green
-  AL: 0xbfa6a6, // Gray
-  SI: 0xf0c8a0, // Tan
-  K: 0x8f40d4, // Purple
-  CA: 0x3dff00, // Green
-  TI: 0xbfc2c7, // Gray
-  CR: 0x8a99c7, // Gray
-  MN: 0x9c7ac7, // Gray
-  FE: 0xe06633, // Orange
-  NI: 0x50d050, // Green
-  CU: 0xc88033, // Brown
-  ZN: 0x7d80b0, // Blue-gray
-  GA: 0xc28f8f, // Brown
-  GE: 0x668f8f, // Gray
-  AS: 0xbd80e3, // Purple
-  SE: 0xffa100, // Orange
-  AG: 0xc0c0c0, // Silver
-  SN: 0x668080, // Gray
-  AU: 0xffd123, // Gold
-  HG: 0xb8b8d0, // Gray
 };
 
 export default function Molecule3DViewer({
@@ -86,6 +50,11 @@ export default function Molecule3DViewer({
   const lastScaleRef = useRef(1);
   const autoRotateRef = useRef(true);
 
+  // Track previous data to detect actual changes
+  // const prevDataRef = useRef<any>(null);
+
+  // const isSimulator = Platform.OS === 'ios' && !Constants.isDevice;
+
   // Reset loading state and force GLView remount when data changes
   useEffect(() => {
     if (data && data.atoms && data.atoms.length > 0) {
@@ -112,6 +81,24 @@ export default function Molecule3DViewer({
       }
     };
   }, []);
+
+  // Show simulator warning
+  // if (isSimulator) {
+  //   return (
+  //     <View style={[styles.container, style]}>
+  //       <View style={styles.simulatorContainer}>
+  //         <MCIcons name="cellphone" size={64} color="#667eea" />
+  //         <Text style={styles.simulatorTitle}>3D Viewer Unavailable</Text>
+  //         <Text style={styles.simulatorText}>
+  //           The 3D molecule viewer is not supported in iOS Simulator due to OpenGL limitations.
+  //         </Text>
+  //         <Text style={styles.simulatorSubtext}>
+  //           Please test on a physical iOS device for full 3D functionality.
+  //         </Text>
+  //       </View>
+  //     </View>
+  //   );
+  // }
 
   if (!data || !data.atoms || data.atoms.length === 0) {
     return (
@@ -281,7 +268,7 @@ export default function Molecule3DViewer({
       // Sphere for atom
       let sphereRadius = 0.3;
       if (style === "sphere") {
-        sphereRadius = 0.5;
+        sphereRadius = 0.7; // Larger spheres for better space-filling
       } else if (style === "stick") {
         sphereRadius = 0.15;
       }
@@ -305,42 +292,44 @@ export default function Molecule3DViewer({
       atomMeshes.push(sphere);
     });
 
-    // Create bonds with proper bond order
-    data.bonds?.forEach((bond) => {
-      const atom1 = data.atoms?.find((a) => a.atomId === bond.a);
-      const atom2 = data.atoms?.find((a) => a.atomId === bond.b);
+    // Create bonds with proper bond order (skip for sphere model)
+    if (style !== "sphere") {
+      data.bonds?.forEach((bond) => {
+        const atom1 = data.atoms?.find((a) => a.atomId === bond.a);
+        const atom2 = data.atoms?.find((a) => a.atomId === bond.b);
 
-      if (atom1 && atom2) {
-        const x1 = atom1.idealX ?? atom1.x ?? 0;
-        const y1 = atom1.idealY ?? atom1.y ?? 0;
-        const z1 = atom1.idealZ ?? atom1.z ?? 0;
+        if (atom1 && atom2) {
+          const x1 = atom1.idealX ?? atom1.x ?? 0;
+          const y1 = atom1.idealY ?? atom1.y ?? 0;
+          const z1 = atom1.idealZ ?? atom1.z ?? 0;
 
-        const x2 = atom2.idealX ?? atom2.x ?? 0;
-        const y2 = atom2.idealY ?? atom2.y ?? 0;
-        const z2 = atom2.idealZ ?? atom2.z ?? 0;
+          const x2 = atom2.idealX ?? atom2.x ?? 0;
+          const y2 = atom2.idealY ?? atom2.y ?? 0;
+          const z2 = atom2.idealZ ?? atom2.z ?? 0;
 
-        const start = new THREE.Vector3(x1, y1, z1);
-        const end = new THREE.Vector3(x2, y2, z2);
+          const start = new THREE.Vector3(x1, y1, z1);
+          const end = new THREE.Vector3(x2, y2, z2);
 
-        // Parse bond order
-        const bondOrder = parseBondOrder(bond.order);
+          // Parse bond order
+          const bondOrder = parseBondOrder(bond.order);
 
-        // Get appropriate bond radius
-        const bondRadius = style === "stick" ? 0.1 : 0.08;
+          // Get appropriate bond radius
+          const bondRadius = style === "stick" ? 0.1 : 0.08;
 
-        // Create bond cylinders based on order
-        const bondCylinders = createBond(start, end, bondOrder, bondRadius);
+          // Create bond cylinders based on order
+          const bondCylinders = createBond(start, end, bondOrder, bondRadius);
 
-        bondCylinders.forEach((cylinder) => {
-          cylinder.userData = {
-            type: "bond",
-            order: bondOrder,
-            atoms: `${bond.a}-${bond.b}`,
-          };
-          moleculeGroup.add(cylinder);
-        });
-      }
-    });
+          bondCylinders.forEach((cylinder) => {
+            cylinder.userData = {
+              type: "bond",
+              order: bondOrder,
+              atoms: `${bond.a}-${bond.b}`,
+            };
+            moleculeGroup.add(cylinder);
+          });
+        }
+      });
+    }
 
     // Center the molecule
     const box = new THREE.Box3().setFromObject(moleculeGroup);
@@ -355,8 +344,7 @@ export default function Molecule3DViewer({
     data.bonds?.forEach((bond) => {
       const order = parseBondOrder(bond.order);
       console.log(
-        `  ${bond.a}-${bond.b}: ${
-          order === 1 ? "Single" : order === 2 ? "Double" : "Triple"
+        `  ${bond.a}-${bond.b}: ${order === 1 ? "Single" : order === 2 ? "Double" : "Triple"
         } bond`
       );
     });
@@ -663,6 +651,35 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 14,
   },
+
+  // // Simulator warning
+  // simulatorContainer: {
+  //   flex: 1,
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   gap: 16,
+  //   padding: 20,
+  // },
+  // simulatorTitle: {
+  //   color: '#ffffff',
+  //   fontSize: 18,
+  //   fontWeight: 'bold',
+  //   textAlign: 'center',
+  // },
+  // simulatorText: {
+  //   color: '#ffffff',
+  //   fontSize: 14,
+  //   textAlign: 'center',
+  //   lineHeight: 20,
+  // },
+  // simulatorSubtext: {
+  //   color: '#667eea',
+  //   fontSize: 12,
+  //   textAlign: 'center',
+  //   fontStyle: 'italic',
+  // },
+
+  // Controls
   controls: {
     position: "absolute",
     flexDirection: "row",

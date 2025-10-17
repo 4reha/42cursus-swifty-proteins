@@ -2,31 +2,19 @@ import MCIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import React from "react";
 import {
   ActivityIndicator,
-  StyleProp,
   Text,
   TextStyle,
   TouchableOpacity,
-  TouchableOpacityProps,
   View,
   ViewStyle,
 } from "react-native";
 import { globalStyles } from "../../styles/globalStyles";
 import { theme } from "../../styles/theme";
-
-type ButtonVariant = "primary" | "success" | "ghost" | "outline";
-type ButtonSize = "sm" | "md" | "lg";
-
-interface ButtonProps extends Omit<TouchableOpacityProps, "style"> {
-  readonly title: string;
-  readonly variant?: ButtonVariant;
-  readonly size?: ButtonSize;
-  readonly loading?: boolean;
-  readonly disabled?: boolean;
-  readonly icon?: keyof typeof MCIcons.glyphMap;
-  readonly iconPosition?: "left" | "right";
-  readonly style?: StyleProp<ViewStyle>;
-  readonly textStyle?: StyleProp<TextStyle>;
-}
+import {
+  ButtonProps,
+  ButtonVariant,
+  ButtonSize,
+} from "@/types/component.types";
 
 export default function Button({
   title,
