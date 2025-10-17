@@ -10,7 +10,11 @@ import {
 } from "react-native";
 import { globalStyles } from "../../styles/globalStyles";
 import { theme } from "../../styles/theme";
-import { ButtonProps, ButtonVariant, ButtonSize } from "@/types/types";
+import {
+  ButtonProps,
+  ButtonVariant,
+  ButtonSize,
+} from "@/types/component.types";
 
 export default function Button({
   title,

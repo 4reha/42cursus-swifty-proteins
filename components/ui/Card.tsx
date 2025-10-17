@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { globalStyles } from "../../styles/globalStyles";
-import { CardProps } from "@/types/types";
+import { CardProps } from "@/types/component.types";
 
 export default function Card({
   children,
