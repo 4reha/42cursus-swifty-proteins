@@ -31,7 +31,6 @@ import { useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -49,7 +48,6 @@ export default function ExploreDetail() {
   const insets = useSafeAreaInsets();
 
   const [activeTab, setActiveTab] = useState<"2D" | "3D">("3D"); // Start with 3D
-  const [refreshing, setRefreshing] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   const handleShare = async () => {
@@ -102,17 +100,6 @@ export default function ExploreDetail() {
     }
   };
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    try {
-      // Refetch both SVG and CIF data
-      await Promise.all([refetchSvg(), refetchCif()]);
-    } catch (error) {
-      console.error("Error refreshing data:", error);
-    } finally {
-      setRefreshing(false);
-    }
-  };
 
   // Build URLs
   const svgUrl = `${LIGAND_API_SVG_URL}${id[0]}/${id}.svg`;
@@ -123,7 +110,6 @@ export default function ExploreDetail() {
     data: svgResp,
     loading: svgLoading,
     error: svgError,
-    refetch: refetchSvg,
   } = useFetch<string>(svgUrl, { responseType: "text" });
 
   // Fetch CIF
@@ -131,7 +117,6 @@ export default function ExploreDetail() {
     data: cifResp,
     loading: cifLoading,
     error: cifError,
-    refetch: refetchCif,
   } = useFetch<string>(cifUrl, { responseType: "text" });
 
   // Parse CIF data using useMemo to avoid re-parsing
@@ -180,8 +165,8 @@ export default function ExploreDetail() {
     );
   }
 
-  // Show loading state (but not when refreshing)
-  if (cifLoading && !refreshing) {
+  // Show loading state
+  if (cifLoading) {
     return (
       <View style={globalStyles.container}>
         {/* Header */}
@@ -249,14 +234,6 @@ export default function ExploreDetail() {
     <ScrollView
       style={globalStyles.container}
       contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          tintColor="#667eea"
-          colors={["#667eea"]}
-        />
-      }
     >
       {/* Header with back button and share button */}
       <View style={[styles.header, { paddingTop: insets.top + theme.spacing.sm }]}>
@@ -272,13 +249,6 @@ export default function ExploreDetail() {
             />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Ligand</Text>
-          {refreshing && (
-            <ActivityIndicator
-              size="small"
-              color="#667eea"
-              style={{ marginLeft: 8 }}
-            />
-          )}
         </View>
         <View style={styles.headerActions}>
           <TouchableOpacity
