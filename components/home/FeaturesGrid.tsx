@@ -3,46 +3,45 @@
  * Displays the key features of the application
  */
 
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
+import { theme } from "@/styles/theme";
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 export function FeaturesGrid() {
   return (
-    <ThemedView style={styles.featuresContainer}>
-      <ThemedText type="subtitle">Key Features</ThemedText>
+    <View style={styles.featuresContainer}>
+      <Text style={styles.featuresTitle}>Key Features</Text>
       <View style={styles.featuresGrid}>
         <View style={styles.featureItem}>
           <Ionicons name="eye-outline" size={24} color="#4A90E2" />
-          <ThemedText style={styles.featureTitle}>3D Visualization</ThemedText>
-          <ThemedText style={styles.featureDescription}>
+          <Text style={styles.featureTitle}>3D Visualization</Text>
+          <Text style={styles.featureDescription}>
             Interactive 3D protein structure viewing
-          </ThemedText>
+          </Text>
         </View>
         <View style={styles.featureItem}>
           <Ionicons name="analytics-outline" size={24} color="#4A90E2" />
-          <ThemedText style={styles.featureTitle}>Analysis Tools</ThemedText>
-          <ThemedText style={styles.featureDescription}>
+          <Text style={styles.featureTitle}>Analysis Tools</Text>
+          <Text style={styles.featureDescription}>
             Advanced protein analysis and comparison
-          </ThemedText>
+          </Text>
         </View>
         <View style={styles.featureItem}>
           <Ionicons name="cloud-outline" size={24} color="#4A90E2" />
-          <ThemedText style={styles.featureTitle}>Cloud Sync</ThemedText>
-          <ThemedText style={styles.featureDescription}>
+          <Text style={styles.featureTitle}>Cloud Sync</Text>
+          <Text style={styles.featureDescription}>
             Sync your work across devices
-          </ThemedText>
+          </Text>
         </View>
         <View style={styles.featureItem}>
           <Ionicons name="people-outline" size={24} color="#4A90E2" />
-          <ThemedText style={styles.featureTitle}>Collaboration</ThemedText>
-          <ThemedText style={styles.featureDescription}>
+          <Text style={styles.featureTitle}>Collaboration</Text>
+          <Text style={styles.featureDescription}>
             Share and collaborate on projects
-          </ThemedText>
+          </Text>
         </View>
       </View>
-    </ThemedView>
+    </View>
   );
 }
 
@@ -67,14 +66,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
+  featuresTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: theme.colors.text.white,
+    marginBottom: 12,
+  },
   featureTitle: {
     fontSize: 14,
     fontWeight: "600",
     textAlign: "center",
+    color: theme.colors.text.white,
   },
   featureDescription: {
     fontSize: 12,
-    color: "#666",
+    color: theme.colors.text.light,
     textAlign: "center",
   },
 });

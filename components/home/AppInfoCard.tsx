@@ -3,28 +3,27 @@
  * Displays application information
  */
 
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
+import { theme } from "@/styles/theme";
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 export function AppInfoCard() {
   return (
-    <ThemedView style={styles.appInfoContainer}>
+    <View style={styles.appInfoContainer}>
       <View style={styles.appHeader}>
         <Ionicons name="flask" size={32} color="#4A90E2" />
         <View style={styles.appTitleContainer}>
-          <ThemedText type="subtitle" style={styles.appTitle}>
+          <Text style={styles.appTitle}>
             Swifty Protein
-          </ThemedText>
-          <ThemedText style={styles.appSubtitle}>42 School Project</ThemedText>
+          </Text>
+          <Text style={styles.appSubtitle}>42 School Project</Text>
         </View>
       </View>
-      <ThemedText style={styles.appDescription}>
+      <Text style={styles.appDescription}>
         A powerful protein visualization and analysis tool for researchers and
         students.
-      </ThemedText>
-    </ThemedView>
+      </Text>
+    </View>
   );
 }
 
@@ -60,5 +59,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     opacity: 0.9,
+    color: theme.colors.text.white,
   },
 });

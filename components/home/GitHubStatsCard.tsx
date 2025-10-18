@@ -3,11 +3,10 @@
  * Displays GitHub statistics in a card layout
  */
 
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
+import { theme } from "@/styles/theme";
 import { User } from "@/types/auth.types";
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 interface GitHubStatsCardProps {
   user: User;
@@ -17,39 +16,39 @@ export function GitHubStatsCard({ user }: Readonly<GitHubStatsCardProps>) {
   if (!user.githubData) return null;
 
   return (
-    <ThemedView style={styles.githubStatsContainer}>
-      <ThemedText type="subtitle">GitHub Statistics</ThemedText>
+    <View style={styles.githubStatsContainer}>
+      <Text style={styles.githubStatsTitle}>GitHub Statistics</Text>
       <View style={styles.githubStatsGrid}>
         <View style={styles.githubStatCard}>
           <Ionicons name="git-branch-outline" size={24} color="#4A90E2" />
-          <ThemedText style={styles.githubStatNumber}>
+          <Text style={styles.githubStatNumber}>
             {user.githubData.public_repos || 0}
-          </ThemedText>
-          <ThemedText style={styles.githubStatLabel}>Public Repos</ThemedText>
+          </Text>
+          <Text style={styles.githubStatLabel}>Public Repos</Text>
         </View>
         <View style={styles.githubStatCard}>
           <Ionicons name="people-outline" size={24} color="#4A90E2" />
-          <ThemedText style={styles.githubStatNumber}>
+          <Text style={styles.githubStatNumber}>
             {user.githubData.followers || 0}
-          </ThemedText>
-          <ThemedText style={styles.githubStatLabel}>Followers</ThemedText>
+          </Text>
+          <Text style={styles.githubStatLabel}>Followers</Text>
         </View>
         <View style={styles.githubStatCard}>
           <Ionicons name="person-add-outline" size={24} color="#4A90E2" />
-          <ThemedText style={styles.githubStatNumber}>
+          <Text style={styles.githubStatNumber}>
             {user.githubData.following || 0}
-          </ThemedText>
-          <ThemedText style={styles.githubStatLabel}>Following</ThemedText>
+          </Text>
+          <Text style={styles.githubStatLabel}>Following</Text>
         </View>
         <View style={styles.githubStatCard}>
           <Ionicons name="code-slash-outline" size={24} color="#4A90E2" />
-          <ThemedText style={styles.githubStatNumber}>
+          <Text style={styles.githubStatNumber}>
             {user.githubData.public_gists || 0}
-          </ThemedText>
-          <ThemedText style={styles.githubStatLabel}>Gists</ThemedText>
+          </Text>
+          <Text style={styles.githubStatLabel}>Gists</Text>
         </View>
       </View>
-    </ThemedView>
+    </View>
   );
 }
 
@@ -79,8 +78,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#4A90E2",
   },
+  githubStatsTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: theme.colors.text.white,
+    marginBottom: 12,
+  },
   githubStatLabel: {
     fontSize: 12,
-    color: "#666",
+    color: theme.colors.text.light,
   },
 });

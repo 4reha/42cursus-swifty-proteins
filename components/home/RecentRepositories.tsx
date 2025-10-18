@@ -3,11 +3,10 @@
  * Displays recent GitHub repositories
  */
 
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
+import { theme } from "@/styles/theme";
 import { User } from "@/types/auth.types";
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 interface RecentRepositoriesProps {
   user: User;
@@ -24,47 +23,47 @@ export function RecentRepositories({
   }
 
   return (
-    <ThemedView style={styles.recentReposContainer}>
-      <ThemedText type="subtitle">Recent Repositories</ThemedText>
+    <View style={styles.recentReposContainer}>
+      <Text style={styles.recentReposTitle}>Recent Repositories</Text>
       <View style={styles.reposList}>
         {user.githubData.recent_repos.slice(0, 3).map((repo: any) => (
           <View key={repo.id || repo.name} style={styles.repoItem}>
             <View style={styles.repoHeader}>
               <Ionicons name="folder-outline" size={16} color="#4A90E2" />
-              <ThemedText style={styles.repoName}>{repo.name}</ThemedText>
+              <Text style={styles.repoName}>{repo.name}</Text>
               {repo.private && (
                 <Ionicons name="lock-closed" size={12} color="#666" />
               )}
             </View>
             {repo.description && (
-              <ThemedText style={styles.repoDescription}>
+              <Text style={styles.repoDescription}>
                 {repo.description}
-              </ThemedText>
+              </Text>
             )}
             <View style={styles.repoStats}>
               <View style={styles.repoStatItem}>
                 <Ionicons name="star-outline" size={12} color="#FFD700" />
-                <ThemedText style={styles.repoStatText}>
+                <Text style={styles.repoStatText}>
                   {repo.stargazers_count || 0}
-                </ThemedText>
+                </Text>
               </View>
               <View style={styles.repoStatItem}>
                 <Ionicons name="git-branch-outline" size={12} color="#666" />
-                <ThemedText style={styles.repoStatText}>
+                <Text style={styles.repoStatText}>
                   {repo.forks_count || 0}
-                </ThemedText>
+                </Text>
               </View>
               <View style={styles.repoStatItem}>
                 <Ionicons name="code-outline" size={12} color="#666" />
-                <ThemedText style={styles.repoStatText}>
+                <Text style={styles.repoStatText}>
                   {repo.language || "No language"}
-                </ThemedText>
+                </Text>
               </View>
             </View>
           </View>
         ))}
       </View>
-    </ThemedView>
+    </View>
   );
 }
 
@@ -89,14 +88,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
+  recentReposTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: theme.colors.text.white,
+    marginBottom: 12,
+  },
   repoName: {
     fontSize: 14,
     fontWeight: "600",
     flex: 1,
+    color: theme.colors.text.white,
   },
   repoDescription: {
     fontSize: 12,
-    color: "#666",
+    color: theme.colors.text.light,
     lineHeight: 18,
   },
   repoStats: {
@@ -111,6 +117,6 @@ const styles = StyleSheet.create({
   },
   repoStatText: {
     fontSize: 11,
-    color: "#666",
+    color: theme.colors.text.light,
   },
 });

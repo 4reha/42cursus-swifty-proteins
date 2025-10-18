@@ -54,5 +54,5 @@ export type CollapsibleCardProps = {
 export type ParallaxScrollViewProps = {
   readonly children: ReactNode;
   readonly headerImage: ReactElement;
-  readonly headerBackgroundColor: { dark: string; light: string };
+  readonly headerBackgroundColor: string;
 };

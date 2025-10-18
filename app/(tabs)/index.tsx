@@ -11,18 +11,17 @@ import { QuickActions } from "@/components/home/QuickActions";
 import { RecentRepositories } from "@/components/home/RecentRepositories";
 import { HelloWave } from "@/components/hello-wave";
 import ParallaxScrollView from "@/components/parallax-scroll-view";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
 import { useAuth } from "@/contexts/AuthContext";
+import { theme } from "@/styles/theme";
 import { Image } from "expo-image";
-import { StyleSheet } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 export default function HomeScreen() {
   const { user, isAuthenticated } = useAuth();
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
+      headerBackgroundColor="#1D3D47"
       headerImage={
         isAuthenticated && user?.avatarUrl ? (
           <Image
@@ -37,10 +36,10 @@ export default function HomeScreen() {
         )
       }
     >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
+      <View style={styles.titleContainer}>
+        <Text style={styles.titleText}>Welcome!</Text>
         <HelloWave />
-      </ThemedView>
+      </View>
 
       {/* App Information */}
       <AppInfoCard />
@@ -68,6 +67,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    marginBottom: 16,
+  },
+  titleText: {
+    fontSize: 32,
+    fontWeight: "bold",
+    lineHeight: 32,
+    color: theme.colors.text.white,
   },
   reactLogo: {
     height: 178,

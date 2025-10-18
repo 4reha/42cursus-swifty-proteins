@@ -3,11 +3,10 @@
  * Displays GitHub user information including avatar, bio, stats
  */
 
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
+import { theme } from "@/styles/theme";
 import { User } from "@/types/auth.types";
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 interface GitHubUserInfoProps {
   user: User;
@@ -16,29 +15,29 @@ interface GitHubUserInfoProps {
 export function GitHubUserInfo({ user }: Readonly<GitHubUserInfoProps>) {
   return (
     <>
-      <ThemedView style={styles.userInfoContainer}>
+      <View style={styles.userInfoContainer}>
         <View style={styles.userCard}>
           <View style={styles.userDetails}>
             <View style={styles.userHeader}>
-              <ThemedText type="defaultSemiBold" style={styles.username}>
+              <Text style={styles.username}>
                 {user.githubData?.name || user.username}
-              </ThemedText>
+              </Text>
             </View>
 
-            <ThemedText style={styles.userEmail}>{user.email}</ThemedText>
+            <Text style={styles.userEmail}>{user.email}</Text>
 
             {user.githubData?.bio && (
-              <ThemedText style={styles.userBio}>
+              <Text style={styles.userBio}>
                 {user.githubData?.bio}
-              </ThemedText>
+              </Text>
             )}
 
             {user.githubData?.location && (
               <View style={styles.userLocation}>
                 <Ionicons name="location-outline" size={14} color="#666" />
-                <ThemedText style={styles.locationText}>
+                <Text style={styles.locationText}>
                   {user.githubData?.location}
-                </ThemedText>
+                </Text>
               </View>
             )}
 
@@ -51,16 +50,16 @@ export function GitHubUserInfo({ user }: Readonly<GitHubUserInfoProps>) {
                   size={14}
                   color="#4A90E2"
                 />
-                <ThemedText style={styles.authMethod}>
+                <Text style={styles.authMethod}>
                   {user.authMethod === "github" ? "GitHub" : "Password"}
-                </ThemedText>
+                </Text>
               </View>
             </View>
 
             <View style={styles.userStats}>
               <View style={styles.statItem}>
                 <Ionicons name="time-outline" size={14} color="#666" />
-                <ThemedText style={styles.statText}>Active Session</ThemedText>
+                <Text style={styles.statText}>Active Session</Text>
               </View>
               <View style={styles.statItem}>
                 <Ionicons
@@ -68,7 +67,7 @@ export function GitHubUserInfo({ user }: Readonly<GitHubUserInfoProps>) {
                   size={14}
                   color="#4CAF50"
                 />
-                <ThemedText style={styles.statText}>Secure</ThemedText>
+                <Text style={styles.statText}>Secure</Text>
               </View>
             </View>
 
@@ -80,19 +79,19 @@ export function GitHubUserInfo({ user }: Readonly<GitHubUserInfoProps>) {
                     size={16}
                     color="#4A90E2"
                   />
-                  <ThemedText style={styles.githubStatNumber}>
+                  <Text style={styles.githubStatNumber}>
                     {user.githubData?.public_repos || 0}
-                  </ThemedText>
-                  <ThemedText style={styles.githubStatLabel}>Repos</ThemedText>
+                  </Text>
+                  <Text style={styles.githubStatLabel}>Repos</Text>
                 </View>
                 <View style={styles.githubStatItem}>
                   <Ionicons name="people-outline" size={16} color="#4A90E2" />
-                  <ThemedText style={styles.githubStatNumber}>
+                  <Text style={styles.githubStatNumber}>
                     {user.githubData?.followers || 0}
-                  </ThemedText>
-                  <ThemedText style={styles.githubStatLabel}>
+                  </Text>
+                  <Text style={styles.githubStatLabel}>
                     Followers
-                  </ThemedText>
+                  </Text>
                 </View>
                 <View style={styles.githubStatItem}>
                   <Ionicons
@@ -100,65 +99,65 @@ export function GitHubUserInfo({ user }: Readonly<GitHubUserInfoProps>) {
                     size={16}
                     color="#4A90E2"
                   />
-                  <ThemedText style={styles.githubStatNumber}>
+                  <Text style={styles.githubStatNumber}>
                     {user.githubData?.following || 0}
-                  </ThemedText>
-                  <ThemedText style={styles.githubStatLabel}>
+                  </Text>
+                  <Text style={styles.githubStatLabel}>
                     Following
-                  </ThemedText>
+                  </Text>
                 </View>
               </View>
             )}
           </View>
         </View>
-      </ThemedView>
+      </View>
 
-      <ThemedView style={styles.githubProfileContainer}>
+      <View style={styles.githubProfileContainer}>
         <View style={styles.githubProfileHeader}>
           <Ionicons name="logo-github" size={24} color="#4A90E2" />
-          <ThemedText type="subtitle" style={styles.githubProfileTitle}>
+          <Text style={styles.githubProfileTitle}>
             GitHub Profile
-          </ThemedText>
+          </Text>
         </View>
 
         <View style={styles.githubProfileInfo}>
           {user.githubData?.bio && (
             <View style={styles.githubInfoItem}>
               <Ionicons name="document-text-outline" size={16} color="#666" />
-              <ThemedText style={styles.githubInfoText}>
+              <Text style={styles.githubInfoText}>
                 {user.githubData?.bio}
-              </ThemedText>
+              </Text>
             </View>
           )}
 
           {user.githubData?.location && (
             <View style={styles.githubInfoItem}>
               <Ionicons name="location-outline" size={16} color="#666" />
-              <ThemedText style={styles.githubInfoText}>
+              <Text style={styles.githubInfoText}>
                 {user.githubData?.location}
-              </ThemedText>
+              </Text>
             </View>
           )}
 
           {user.githubData?.company && (
             <View style={styles.githubInfoItem}>
               <Ionicons name="business-outline" size={16} color="#666" />
-              <ThemedText style={styles.githubInfoText}>
+              <Text style={styles.githubInfoText}>
                 {user.githubData?.company}
-              </ThemedText>
+              </Text>
             </View>
           )}
 
           {user.githubData?.blog && (
             <View style={styles.githubInfoItem}>
               <Ionicons name="link-outline" size={16} color="#666" />
-              <ThemedText style={styles.githubInfoText}>
+              <Text style={styles.githubInfoText}>
                 {user.githubData?.blog}
-              </ThemedText>
+              </Text>
             </View>
           )}
         </View>
-      </ThemedView>
+      </View>
     </>
   );
 }
@@ -194,17 +193,17 @@ const styles = StyleSheet.create({
   username: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#fff",
+    color: theme.colors.text.white,
   },
   userEmail: {
     fontSize: 14,
     opacity: 0.8,
-    color: "#fff",
+    color: theme.colors.text.light,
   },
   userBio: {
     fontSize: 13,
     opacity: 0.9,
-    color: "#fff",
+    color: theme.colors.text.light,
     fontStyle: "italic",
     marginTop: 4,
   },
@@ -217,7 +216,7 @@ const styles = StyleSheet.create({
   locationText: {
     fontSize: 12,
     opacity: 0.8,
-    color: "#fff",
+    color: theme.colors.text.light,
   },
   authMethodContainer: {
     marginTop: 4,
@@ -252,6 +251,7 @@ const styles = StyleSheet.create({
   statText: {
     fontSize: 12,
     opacity: 0.7,
+    color: theme.colors.text.light,
   },
   githubStats: {
     flexDirection: "row",
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   githubStatLabel: {
     fontSize: 12,
     opacity: 0.8,
-    color: "#fff",
+    color: theme.colors.text.light,
     textAlign: "center",
   },
   githubProfileContainer: {
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
   },
   githubInfoText: {
     fontSize: 14,
-    color: "#fff",
+    color: theme.colors.text.light,
     flex: 1,
   },
 });

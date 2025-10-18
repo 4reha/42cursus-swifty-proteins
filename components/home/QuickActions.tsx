@@ -3,35 +3,34 @@
  * Displays quick action buttons for navigation
  */
 
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
+import { theme } from "@/styles/theme";
 import { NavigationService } from "@/services/navigationService";
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export function QuickActions() {
   return (
-    <ThemedView style={styles.quickActionsContainer}>
-      <ThemedText type="subtitle">Quick Actions</ThemedText>
+    <View style={styles.quickActionsContainer}>
+      <Text style={styles.quickActionsTitle}>Quick Actions</Text>
       <View style={styles.quickActionsGrid}>
         <TouchableOpacity
           style={styles.quickActionItem}
           onPress={() => NavigationService.toExplore()}
         >
           <Ionicons name="search-outline" size={20} color="#fff" />
-          <ThemedText style={styles.quickActionText}>
+          <Text style={styles.quickActionText}>
             Search Proteins
-          </ThemedText>
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.quickActionItem}
           onPress={() => NavigationService.toFavorites()}
         >
           <Ionicons name="bookmark-outline" size={20} color="#fff" />
-          <ThemedText style={styles.quickActionText}>Favorites</ThemedText>
+          <Text style={styles.quickActionText}>Favorites</Text>
         </TouchableOpacity>
       </View>
-    </ThemedView>
+    </View>
   );
 }
 
@@ -55,6 +54,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "rgba(74, 144, 226, 0.3)",
+  },
+  quickActionsTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: theme.colors.text.white,
+    marginBottom: 12,
   },
   quickActionText: {
     fontSize: 14,
