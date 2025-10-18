@@ -13,6 +13,12 @@
  * The logs will show the complete flow from button click to share completion/cancellation.
  */
 
+/**
+ * EXPLORE DETAIL PAGE - SHARE WITH SCREENSHOT
+ *
+ * This page includes screenshot capture of the 3D molecular view for sharing
+ */
+
 import Molecule3DViewer from "@/components/Molecule3D";
 import MoleculeInfo from "@/components/MoleculeInfo";
 import { LIGAND_API_SVG_URL, LIGAND_API_URL } from "@/config/ligands";
@@ -28,7 +34,7 @@ import { globalStyles } from "@/styles/globalStyles";
 import { theme } from "@/styles/theme";
 import MCIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useLocalSearchParams } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useRef, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -38,34 +44,58 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import ViewShot from "react-native-view-shot";
 
 export default function ExploreDetail() {
   const params = useLocalSearchParams();
   const id = params.id.toString().toUpperCase();
   const { showToast } = useToast();
   const { setSharingInProgress } = useAuth();
-  const { isFavorite, toggleFavorite, canAddFavorite, getFavoritesCount, getMaxFavorites } = useFavorites();
+  const { isFavorite, toggleFavorite, canAddFavorite } = useFavorites();
   const insets = useSafeAreaInsets();
 
-  const [activeTab, setActiveTab] = useState<"2D" | "3D">("3D"); // Start with 3D
+  // Ref for capturing the 3D view
+  const viewShotRef = useRef<ViewShot>(null);
+
+  const [activeTab, setActiveTab] = useState<"2D" | "3D">("3D");
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
 
   const handleShare = async () => {
     try {
+      setIsCapturing(true);
       setSharingInProgress(true);
 
+      let screenshotUri: string | null = null;
+
+      // Capture screenshot if on 3D tab
+      if (activeTab === "3D" && viewShotRef.current) {
+        try {
+          showToast("Capturing 3D view...", 1500);
+
+          // Capture the view as a file URI
+          screenshotUri = (await viewShotRef.current?.capture?.()) || null;
+        } catch (captureError) {
+          console.error("Failed to capture screenshot:", captureError);
+          showToast("Failed to capture screenshot, sharing without image", 2000);
+        }
+      }
+
+      // Share with or without screenshot
       await shareLigand({
         ligandId: id,
         data,
         svgUrl,
         svgXml,
+        screenshotUri,
       });
+
       showToast("Ligand shared successfully!", 2000);
     } catch (error) {
       const errorMessage = ErrorHandler.handle(error, "Share");
       showToast(errorMessage, 2000);
     } finally {
-      // Use a small delay to ensure app state changes are processed first
+      setIsCapturing(false);
       setTimeout(() => {
         setSharingInProgress(false);
       }, 500);
@@ -100,7 +130,6 @@ export default function ExploreDetail() {
     }
   };
 
-
   // Build URLs
   const svgUrl = `${LIGAND_API_SVG_URL}${id[0]}/${id}.svg`;
   const cifUrl = `${LIGAND_API_URL}${id}.cif`;
@@ -119,7 +148,7 @@ export default function ExploreDetail() {
     error: cifError,
   } = useFetch<string>(cifUrl, { responseType: "text" });
 
-  // Parse CIF data using useMemo to avoid re-parsing
+  // Parse CIF data
   const data = useMemo(() => {
     if (!cifResp) return null;
 
@@ -131,11 +160,8 @@ export default function ExploreDetail() {
         name: parsed.name,
         atomCount: parsed.atoms?.length || 0,
         bondCount: parsed.bonds?.length || 0,
-        firstAtom: parsed.atoms?.[0],
-        firstBond: parsed.bonds?.[0],
       });
 
-      // Add SVG URL if available
       if (svgUrl) {
         parsed.svgUrl = svgUrl;
       }
@@ -147,7 +173,6 @@ export default function ExploreDetail() {
     }
   }, [cifResp, id, svgUrl]);
 
-  // SVG XML for 2D view
   const svgXml = svgResp || null;
 
   if (!id) {
@@ -165,11 +190,10 @@ export default function ExploreDetail() {
     );
   }
 
-  // Show loading state
+  // Loading state
   if (cifLoading) {
     return (
       <View style={globalStyles.container}>
-        {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top + theme.spacing.sm }]}>
           <View style={styles.leftGroup}>
             <TouchableOpacity
@@ -194,11 +218,10 @@ export default function ExploreDetail() {
     );
   }
 
-  // Show error state
+  // Error state
   if (cifError) {
     return (
       <View style={globalStyles.container}>
-        {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top + theme.spacing.sm }]}>
           <View style={styles.leftGroup}>
             <TouchableOpacity
@@ -235,7 +258,7 @@ export default function ExploreDetail() {
       style={globalStyles.container}
       contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
     >
-      {/* Header with back button and share button */}
+      {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + theme.spacing.sm }]}>
         <View style={styles.leftGroup}>
           <TouchableOpacity
@@ -257,15 +280,6 @@ export default function ExploreDetail() {
               styles.favoriteButton,
               (!isFavorite(id) && !canAddFavorite()) || favoriteLoading ? styles.favoriteButtonDisabled : null
             ]}
-            accessibilityLabel={
-              favoriteLoading
-                ? "Updating favorites..."
-                : isFavorite(id)
-                  ? "Remove from favorites"
-                  : canAddFavorite()
-                    ? "Add to favorites"
-                    : `Favorites limit reached (${getFavoritesCount()}/${getMaxFavorites()})`
-            }
             disabled={(!isFavorite(id) && !canAddFavorite()) || favoriteLoading}
           >
             {favoriteLoading ? (
@@ -287,13 +301,17 @@ export default function ExploreDetail() {
           <TouchableOpacity
             onPress={handleShare}
             style={styles.shareButton}
-            accessibilityLabel="Share ligand"
+            disabled={isCapturing}
           >
-            <MCIcons
-              name="share-variant"
-              size={20}
-              color={theme.colors.text.white}
-            />
+            {isCapturing ? (
+              <ActivityIndicator size="small" color={theme.colors.text.white} />
+            ) : (
+              <MCIcons
+                name="share-variant"
+                size={20}
+                color={theme.colors.text.white}
+              />
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -310,7 +328,7 @@ export default function ExploreDetail() {
         )}
       </View>
 
-      {/* Tabs: 2D and 3D */}
+      {/* Tabs */}
       <View style={styles.tabBar}>
         <TouchableOpacity
           style={[styles.tabButton, activeTab === "3D" && styles.tabActive]}
@@ -350,7 +368,14 @@ export default function ExploreDetail() {
 
       {/* Tab content */}
       {activeTab === "3D" ? (
-        <View style={styles.viewerContainer}>
+        <ViewShot
+          ref={viewShotRef}
+          options={{
+            format: "png",
+            quality: 0.9,
+          }}
+          style={styles.viewerContainer}
+        >
           {data?.atoms && data.atoms.length > 0 ? (
             <Molecule3DViewer data={data} />
           ) : (
@@ -369,17 +394,9 @@ export default function ExploreDetail() {
                       ? "No atoms found"
                       : "No 3D structure available"}
               </Text>
-              {data?.atoms && data.atoms.length > 0 && (
-                <Text
-                  style={[styles.noDataText, { fontSize: 12, marginTop: 8 }]}
-                >
-                  Debug: {data.atoms.length} atoms, {data.bonds?.length || 0}{" "}
-                  bonds
-                </Text>
-              )}
             </View>
           )}
-        </View>
+        </ViewShot>
       ) : (
         <MoleculeInfo
           data={data}
@@ -488,7 +505,6 @@ const styles = StyleSheet.create({
   tabBar: {
     flexDirection: "row",
     paddingHorizontal: theme.spacing.xl,
-    // paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border.medium,
   },
